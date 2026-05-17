@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo 1 · Function Playground</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --panel:#ffffff;
+      --ink:#14213d;
+      --muted:#5c6b82;
+      --line:#dce3ef;
+      --accent:#335cff;
+      --accent-2:#14b8a6;
+      --warn:#f97316;
+      --danger:#ef4444;
+      --shadow:0 18px 45px rgba(20,33,61,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(51,92,255,.08), transparent 30%),
+        radial-gradient(circle at top right, rgba(20,184,166,.08), transparent 22%),
+        var(--bg);
+      min-height:100vh;
+    }
+    .wrap{
+      max-width:1320px;
+      margin:0 auto;
+      padding:18px;
+      display:grid;
+      grid-template-columns:340px 1fr;
+      gap:18px;
+    }
+    .panel{
+      background:var(--panel);
+      border:1px solid rgba(20,33,61,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .controls{
+      padding:18px;
+      position:sticky;
+      top:20px;
+      align-self:start;
+    }
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(51,92,255,.08);
+      color:var(--accent);
+      font-weight:700;
+      letter-spacing:.02em;
+      font-size:.8rem;
+    }
+    h1{
+      margin:10px 0 6px;
+      font-size:1.65rem;
+      line-height:1.1;
+    }
+    .sub{
+      margin:0 0 12px;
+      color:var(--muted);
+      line-height:1.35;
+      font-size:.94rem;
+    }
+    .equation{
+      background:#0f172a;
+      color:#f8fafc;
+      border-radius:18px;
+      padding:7px 10px;
+      font:600 1rem/1.35 "SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+      margin-bottom:12px;
+      min-height:62px;
+      display:flex;
+      align-items:center;
+    }
+    .grid{
+      display:grid;
+      gap:12px;
+    }
+    .group{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(247,249,253,.95));
+    }
+    .group h2{
+      margin:0 0 8px;
+      font-size:.94rem;
+    }
+    .row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:12px;
+      margin:7px 0;
+    }
+    .row label{
+      font-weight:600;
+      font-size:.95rem;
+    }
+    .value{
+      min-width:72px;
+      text-align:right;
+      color:var(--accent);
+      font-weight:700;
+      font-feature-settings:"tnum";
+    }
+    input[type="range"]{
+      width:100%;
+      accent-color:var(--accent);
+      margin-top:2px;
+    }
+    select, button{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--line);
+      padding:7px 10px;
+      font:inherit;
+      background:white;
+      color:var(--ink);
+    }
+    button{
+      cursor:pointer;
+      font-weight:700;
+      background:linear-gradient(180deg, #ffffff, #eef4ff);
+      transition:transform .2s ease, box-shadow .2s ease;
+    }
+    button:hover{transform:translateY(-1px); box-shadow:0 10px 24px rgba(51,92,255,.12)}
+    .button-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .main{
+      display:grid;
+      gap:18px;
+      align-self:stretch;
+    }
+    .chart-card{
+      padding:18px;
+      min-height:calc(100vh - 56px);
+      display:flex;
+      flex-direction:column;
+    }
+    .topbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:14px;
+      justify-content:space-between;
+      align-items:flex-start;
+      margin-bottom:12px;
+    }
+    .title-block h2{
+      margin:0;
+      font-size:1.35rem;
+    }
+    .title-block p{
+      margin:6px 0 0;
+      color:var(--muted);
+      max-width:760px;
+      line-height:1.35;
+      font-size:.95rem;
+    }
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(110px, 1fr));
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .stat{
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(245,247,251,.95));
+    }
+    .stat .k{
+      color:var(--muted);
+      font-size:.82rem;
+      margin-bottom:6px;
+      display:block;
+    }
+    .stat .v{
+      font-weight:800;
+      font-size:1.12rem;
+      font-feature-settings:"tnum";
+    }
+    .canvas-wrap{
+      flex:1 1 auto;
+      height:clamp(440px, calc(100vh - 285px), 620px);
+      min-height:440px;
+      position:relative;
+      padding:6px 0 0;
+    }
+    canvas{width:100% !important; height:100% !important}
+    .legend-note{
+      color:var(--muted);
+      font-size:.92rem;
+      margin-top:8px;
+      line-height:1.35;
+    }
+    .behavior-legend{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+      align-items:center;
+    }
+    .behavior-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      color:var(--muted);
+      font-size:.84rem;
+      font-weight:700;
+    }
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      display:inline-block;
+    }
+    .dot.increasing{background:var(--accent)}
+    .dot.flat{background:var(--accent-2)}
+    .dot.decreasing{background:var(--warn)}
+    @media (max-width: 1120px){
+      .wrap{grid-template-columns:1fr}
+      .controls{position:relative; top:0}
+    }
+    @media (max-width: 720px){
+      .wrap{padding:16px}
+      .stats{grid-template-columns:repeat(2, minmax(120px, 1fr))}
+      .button-row{grid-template-columns:1fr}
+      .canvas-wrap{height:420px; min-height:360px}
+    }
+    @media (prefers-reduced-motion: reduce){
+      button{transition:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="panel controls">
+      <div class="eyebrow">Demo 1 · Chart.js</div>
+      <h1>Function Playground</h1>
+      <p class="sub">Change the function, move the probe, and watch the graph describe local behavior in real time.</p>
+
+      <div class="equation" id="equationText">y = 1.00 · sin(1.00x + 0.00) + 0.00</div>
+
+      <div class="grid">
+        <section class="group">
+          <h2>Function setup</h2>
+          <div class="row">
+            <label for="mode">Family</label>
+            <span class="value" id="modeValue">Sine</span>
+          </div>
+          <select id="mode">
+            <option value="sine">Sine</option>
+            <option value="cosine">Cosine</option>
+            <option value="quadratic">Quadratic</option>
+            <option value="absolute">Absolute value</option>
+            <option value="exponential">Exponential</option>
+          </select>
+        </section>
+
+        <section class="group">
+          <h2>Parameters</h2>
+
+          <div class="row">
+            <label for="a">a</label>
+            <span class="value" id="aValue">1.00</span>
+          </div>
+          <input id="a" type="range" min="-4" max="4" step="0.05" value="1" />
+
+          <div class="row">
+            <label for="b">b</label>
+            <span class="value" id="bValue">1.00</span>
+          </div>
+          <input id="b" type="range" min="-4" max="4" step="0.05" value="1" />
+
+          <div class="row">
+            <label for="c">c</label>
+            <span class="value" id="cValue">0.00</span>
+          </div>
+          <input id="c" type="range" min="-6.28" max="6.28" step="0.01" value="0" />
+
+          <div class="row">
+            <label for="d">d</label>
+            <span class="value" id="dValue">0.00</span>
+          </div>
+          <input id="d" type="range" min="-6" max="6" step="0.05" value="0" />
+        </section>
+
+        <section class="group">
+          <h2>Sampling and inspection</h2>
+
+          <div class="row">
+            <label for="probeX">Probe x</label>
+            <span class="value" id="probeXValue">0.00</span>
+          </div>
+          <input id="probeX" type="range" min="-10" max="10" step="0.01" value="0" />
+
+          <div class="row">
+            <label for="samples">Samples</label>
+            <span class="value" id="samplesValue">401</span>
+          </div>
+          <input id="samples" type="range" min="101" max="1201" step="20" value="401" />
+
+          <div class="button-row">
+            <button id="presetPeriodic">Periodic preset</button>
+            <button id="presetPolynomial">Polynomial preset</button>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="panel chart-card">
+        <div class="topbar">
+          <div class="title-block">
+            <h2>Graph behavior, not just values</h2>
+            <p>Segment color encodes local behavior. The probe point shows f(x) and an approximate slope at one x value.</p>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="k">f(x)</span>
+            <span class="v" id="fxOut">0.000</span>
+          </div>
+          <div class="stat">
+            <span class="k">Approx. slope</span>
+            <span class="v" id="slopeOut">0.000</span>
+          </div>
+          <div class="stat">
+            <span class="k">y-min</span>
+            <span class="v" id="yMinOut">-1.000</span>
+          </div>
+          <div class="stat">
+            <span class="k">y-max</span>
+            <span class="v" id="yMaxOut">1.000</span>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="chart"></canvas>
+        </div>
+
+        <div class="behavior-legend" aria-label="Line color legend">
+          <span class="behavior-chip"><span class="dot increasing"></span>Increasing</span>
+          <span class="behavior-chip"><span class="dot flat"></span>Nearly flat</span>
+          <span class="behavior-chip"><span class="dot decreasing"></span>Decreasing</span>
+        </div>
+        <p class="legend-note">The highlighted point and guide line make it easy to narrate local behavior live.</p>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const controls = {
+      mode: document.getElementById("mode"),
+      a: document.getElementById("a"),
+      b: document.getElementById("b"),
+      c: document.getElementById("c"),
+      d: document.getElementById("d"),
+      probeX: document.getElementById("probeX"),
+      samples: document.getElementById("samples")
+    };
+
+    const outputs = {
+      mode: document.getElementById("modeValue"),
+      a: document.getElementById("aValue"),
+      b: document.getElementById("bValue"),
+      c: document.getElementById("cValue"),
+      d: document.getElementById("dValue"),
+      probeX: document.getElementById("probeXValue"),
+      samples: document.getElementById("samplesValue"),
+      equation: document.getElementById("equationText"),
+      fx: document.getElementById("fxOut"),
+      slope: document.getElementById("slopeOut"),
+      yMin: document.getElementById("yMinOut"),
+      yMax: document.getElementById("yMaxOut")
+    };
+
+    const xDomain = [-10, 10];
+    const probePlugin = {
+      id: "probeLine",
+      afterDatasetsDraw(chart, args, pluginOptions) {
+        const x = pluginOptions.x;
+        const y = pluginOptions.y;
+        if (x == null || y == null) return;
+
+        const {ctx, chartArea, scales} = chart;
+        const px = scales.x.getPixelForValue(x);
+        const py = scales.y.getPixelForValue(y);
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(20, 33, 61, 0.24)";
+        ctx.lineWidth = 1.25;
+        ctx.setLineDash([7, 7]);
+        ctx.beginPath();
+        ctx.moveTo(px, chartArea.top);
+        ctx.lineTo(px, chartArea.bottom);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#335cff";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(px, py, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+    };
+
+    function format(value, digits = 2) {
+      return Number(value).toFixed(digits);
+    }
+
+    function currentState() {
+      return {
+        mode: controls.mode.value,
+        a: parseFloat(controls.a.value),
+        b: parseFloat(controls.b.value),
+        c: parseFloat(controls.c.value),
+        d: parseFloat(controls.d.value),
+        probeX: parseFloat(controls.probeX.value),
+        samples: parseInt(controls.samples.value, 10)
+      };
+    }
+
+    function evaluate(mode, x, a, b, c, d) {
+      switch (mode) {
+        case "sine":
+          return a * Math.sin(b * x + c) + d;
+        case "cosine":
+          return a * Math.cos(b * x + c) + d;
+        case "quadratic":
+          return a * Math.pow(x - c, 2) + b * x + d;
+        case "absolute":
+          return a * Math.abs(b * x + c) + d;
+        case "exponential":
+          return a * Math.exp((b * x + c) / 6) + d;
+        default:
+          return x;
+      }
+    }
+
+    function approximateSlope(state, x) {
+      const h = 0.001;
+      const y1 = evaluate(state.mode, x - h, state.a, state.b, state.c, state.d);
+      const y2 = evaluate(state.mode, x + h, state.a, state.b, state.c, state.d);
+      return (y2 - y1) / (2 * h);
+    }
+
+    function buildData(state) {
+      const step = (xDomain[1] - xDomain[0]) / (state.samples - 1);
+      const points = [];
+      let minY = Infinity;
+      let maxY = -Infinity;
+
+      for (let i = 0; i < state.samples; i++) {
+        const x = xDomain[0] + step * i;
+        const y = evaluate(state.mode, x, state.a, state.b, state.c, state.d);
+        points.push({x, y});
+        if (Number.isFinite(y)) {
+          minY = Math.min(minY, y);
+          maxY = Math.max(maxY, y);
+        }
+      }
+
+      const probeY = evaluate(state.mode, state.probeX, state.a, state.b, state.c, state.d);
+      const slope = approximateSlope(state, state.probeX);
+      const padding = Math.max(1, (maxY - minY) * 0.15);
+
+      return {
+        points,
+        probeY,
+        slope,
+        yRange: [minY - padding, maxY + padding]
+      };
+    }
+
+    function equationLabel(state) {
+      const a = format(state.a);
+      const b = format(state.b);
+      const c = format(state.c);
+      const d = format(state.d);
+
+      switch (state.mode) {
+        case "sine":
+          return `y = ${a} · sin(${b}x + ${c}) + ${d}`;
+        case "cosine":
+          return `y = ${a} · cos(${b}x + ${c}) + ${d}`;
+        case "quadratic":
+          return `y = ${a}(x - ${c})² + ${b}x + ${d}`;
+        case "absolute":
+          return `y = ${a} · |${b}x + ${c}| + ${d}`;
+        case "exponential":
+          return `y = ${a} · e^(( ${b}x + ${c} ) / 6) + ${d}`;
+        default:
+          return "";
+      }
+    }
+
+    const ctx = document.getElementById("chart");
+    const chart = new Chart(ctx, {
+      type: "scatter",
+      data: {
+        datasets: [
+          {
+            label: "f(x)",
+            data: [],
+            showLine: true,
+            borderWidth: 3.2,
+            pointRadius: 0,
+            tension: 0.15,
+            segment: {
+              borderColor(context) {
+                const y0 = context.p0.parsed.y;
+                const y1 = context.p1.parsed.y;
+                const delta = y1 - y0;
+                if (Math.abs(delta) < 0.02) return "#14b8a6";
+                return delta > 0 ? "#335cff" : "#f97316";
+              }
+            }
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        parsing: false,
+        animation: reducedMotion ? false : {duration: 320},
+        interaction: {mode: "nearest", axis: "x", intersect: false},
+        plugins: {
+          legend: {display: false},
+          tooltip: {
+            callbacks: {
+              label(context) {
+                const x = context.raw.x;
+                const y = context.raw.y;
+                return `(${x.toFixed(2)}, ${y.toFixed(2)})`;
+              }
+            }
+          },
+          probeLine: {x: 0, y: 0}
+        },
+        scales: {
+          x: {
+            type: "linear",
+            min: xDomain[0],
+            max: xDomain[1],
+            grid: {color: "rgba(20, 33, 61, 0.08)"},
+            title: {display: true, text: "x"},
+            ticks: {color: "#5c6b82"}
+          },
+          y: {
+            grid: {color: "rgba(20, 33, 61, 0.08)"},
+            title: {display: true, text: "y"},
+            ticks: {color: "#5c6b82"}
+          }
+        }
+      },
+      plugins: [probePlugin]
+    });
+
+    function syncLabels(state) {
+      outputs.mode.textContent = controls.mode.options[controls.mode.selectedIndex].text;
+      outputs.a.textContent = format(state.a);
+      outputs.b.textContent = format(state.b);
+      outputs.c.textContent = format(state.c);
+      outputs.d.textContent = format(state.d);
+      outputs.probeX.textContent = format(state.probeX);
+      outputs.samples.textContent = String(state.samples);
+      outputs.equation.textContent = equationLabel(state);
+    }
+
+    function render() {
+      const state = currentState();
+      syncLabels(state);
+
+      const data = buildData(state);
+      chart.data.datasets[0].data = data.points;
+      chart.options.scales.y.min = data.yRange[0];
+      chart.options.scales.y.max = data.yRange[1];
+      chart.options.plugins.probeLine = {x: state.probeX, y: data.probeY};
+      chart.update();
+
+      outputs.fx.textContent = format(data.probeY, 3);
+      outputs.slope.textContent = format(data.slope, 3);
+      outputs.yMin.textContent = format(data.yRange[0], 3);
+      outputs.yMax.textContent = format(data.yRange[1], 3);
+    }
+
+    function normalizeForMode() {
+      if (controls.mode.value === "exponential") {
+        // Keep the stage demo readable by avoiding huge exponential ranges.
+        if (Math.abs(parseFloat(controls.b.value)) > 1.8) controls.b.value = "1.2";
+        if (Math.abs(parseFloat(controls.a.value)) > 2.5) controls.a.value = "1.2";
+        if (parseFloat(controls.probeX.value) > 6) controls.probeX.value = "3";
+        if (parseFloat(controls.probeX.value) < -6) controls.probeX.value = "-3";
+      }
+    }
+
+    Object.values(controls).forEach(control => {
+      control.addEventListener("input", () => {
+        normalizeForMode();
+        render();
+      });
+      control.addEventListener("change", () => {
+        normalizeForMode();
+        render();
+      });
+    });
+
+    document.getElementById("presetPeriodic").addEventListener("click", () => {
+      controls.mode.value = "sine";
+      controls.a.value = "2.3";
+      controls.b.value = "1.65";
+      controls.c.value = "0.7";
+      controls.d.value = "0.4";
+      controls.probeX.value = "2.2";
+      render();
+    });
+
+    document.getElementById("presetPolynomial").addEventListener("click", () => {
+      controls.mode.value = "quadratic";
+      controls.a.value = "0.22";
+      controls.b.value = "-0.9";
+      controls.c.value = "1.4";
+      controls.d.value = "-1.1";
+      controls.probeX.value = "3.1";
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

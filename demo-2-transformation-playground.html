@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo 2 · Transformation Playground</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --panel:#ffffff;
+      --ink:#10213a;
+      --muted:#607086;
+      --line:#dde5f0;
+      --accent:#7c3aed;
+      --accent-2:#06b6d4;
+      --accent-3:#f59e0b;
+      --danger:#ef4444;
+      --shadow:0 18px 45px rgba(16,33,58,.08);
+      --radius:22px;
+      --unit:35px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(124,58,237,.08), transparent 20%),
+        radial-gradient(circle at bottom left, rgba(6,182,212,.09), transparent 22%),
+        var(--bg);
+      height:100vh;
+      min-height:100vh;
+      overflow:hidden;
+    }
+    .wrap{
+      max-width:1480px;
+      margin:0 auto;
+      padding:14px 18px;
+      display:grid;
+      grid-template-columns:330px minmax(0, 1fr);
+      gap:16px;
+      height:100vh;
+      min-height:0;
+    }
+    .panel{
+      background:var(--panel);
+      border:1px solid rgba(16,33,58,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .controls{
+      padding:16px;
+      position:sticky;
+      top:14px;
+      align-self:start;
+      max-height:calc(100vh - 28px);
+      overflow:auto;
+    }
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(124,58,237,.09);
+      color:var(--accent);
+      font-weight:800;
+      letter-spacing:.02em;
+      font-size:.72rem;
+    }
+    h1{
+      margin:10px 0 5px;
+      font-size:1.45rem;
+      line-height:1.1;
+      letter-spacing:-.02em;
+    }
+    .sub{
+      margin:0 0 10px;
+      color:var(--muted);
+      line-height:1.35;
+      font-size:.88rem;
+    }
+    .grid{display:grid;gap:9px}
+    .group{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px;
+      background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(246,248,252,.95));
+    }
+    .group h2{margin:0 0 7px;font-size:.9rem}
+    .row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:8px;
+      margin:5px 0;
+    }
+    label{font-weight:750;font-size:.86rem}
+    .value{
+      min-width:58px;
+      text-align:right;
+      color:var(--accent);
+      font-weight:850;
+      font-feature-settings:"tnum";
+      font-size:.9rem;
+    }
+    input[type="range"]{width:100%;accent-color:var(--accent);margin-top:2px}
+    .check-row{display:grid;gap:5px;margin-top:5px}
+    .check-row label{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      font-weight:650;
+      color:var(--muted);
+      font-size:.82rem;
+    }
+    button{
+      width:100%;
+      border-radius:12px;
+      border:1px solid var(--line);
+      padding:8px 10px;
+      font:inherit;
+      background:linear-gradient(180deg, #ffffff, #f5f3ff);
+      color:var(--ink);
+      cursor:pointer;
+      font-weight:850;
+      transition:transform .2s ease, box-shadow .2s ease;
+      font-size:.88rem;
+    }
+    button:hover{transform:translateY(-1px); box-shadow:0 10px 24px rgba(124,58,237,.12)}
+    .button-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+    .main{min-width:0;min-height:0}
+    .stage-card{
+      padding:14px;
+      height:calc(100vh - 28px);
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      overflow:hidden;
+    }
+    .header{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .header h2{
+      margin:0;
+      font-size:1.2rem;
+      letter-spacing:-.02em;
+    }
+    .header p{
+      margin:4px 0 0;
+      color:var(--muted);
+      max-width:780px;
+      line-height:1.35;
+      font-size:.88rem;
+    }
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(110px, 1fr));
+      gap:8px;
+    }
+    .stat{
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.94), rgba(245,247,251,.96));
+    }
+    .stat .k{display:block;color:var(--muted);font-size:.72rem;margin-bottom:3px}
+    .stat .v{font-weight:900;font-size:.98rem;font-feature-settings:"tnum"}
+    .stage{
+      flex:1 1 auto;
+      min-height:0;
+      width:100%;
+      border-radius:18px;
+      border:1px solid var(--line);
+      overflow:hidden;
+      background:linear-gradient(180deg, #ffffff, #f9fbff);
+    }
+    svg{width:100%;height:100%;display:block}
+    .shape{
+      transform-box:view-box;
+      transform-origin:350px 290px;
+      filter:drop-shadow(0 18px 16px rgba(124,58,237,.12));
+    }
+    .bottom-dock{
+      display:grid;
+      grid-template-columns:minmax(320px, .72fr) 1fr;
+      gap:8px;
+      align-items:stretch;
+      flex:0 0 auto;
+    }
+    .matrix-card,.legend-card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(247,249,253,.95));
+      padding:8px;
+    }
+    .dock-title{
+      margin:0 0 5px;
+      font-size:.72rem;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:850;
+    }
+    .matrix{
+      overflow:auto;
+      border-radius:12px;
+      padding:7px;
+      background:#0f172a;
+      color:#e2e8f0;
+      font-family:"SFMono-Regular",Consolas,Menlo,monospace;
+    }
+    table{width:100%;border-collapse:collapse;font-feature-settings:"tnum"}
+    td{padding:4px 7px;border:1px solid rgba(255,255,255,.08);text-align:right;font-size:.76rem}
+    td:first-child{text-align:left;color:#94a3b8;font-weight:800;width:42px}
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+      margin-top:5px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding:7px 9px;
+      border-radius:999px;
+      background:rgba(16,33,58,.05);
+      color:var(--muted);
+      font-weight:750;
+      font-size:.78rem;
+    }
+    .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+    .micro-note{display:none}
+    @media (max-width: 1140px){
+      .wrap{grid-template-columns:1fr}
+      .controls{position:relative;top:0;max-height:none}
+      .stage-card{min-height:auto}
+    }
+    @media (max-width: 760px){
+      .wrap{padding:14px}
+      .stats{grid-template-columns:repeat(2, minmax(120px, 1fr))}
+      .stage{height:500px;min-height:500px}
+      .bottom-dock{grid-template-columns:1fr}
+      .button-row{grid-template-columns:1fr}
+    }
+    @media (prefers-reduced-motion: reduce){
+      button{transition:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="panel controls">
+      <div class="eyebrow">Demo 2 · SVG + WAAPI</div>
+      <h1>Transformation Playground</h1>
+      <p class="sub">Change translation, scale, rotation, and reflection. Watch one matrix turn separate controls into one visible motion.</p>
+
+      <div class="grid">
+        <section class="group">
+          <h2>Translation</h2>
+          <div class="row"><label for="tx">x-shift</label><span class="value" id="txValue">0.00</span></div>
+          <input id="tx" type="range" min="-8" max="8" step="0.1" value="0" />
+          <div class="row"><label for="ty">y-shift</label><span class="value" id="tyValue">0.00</span></div>
+          <input id="ty" type="range" min="-8" max="8" step="0.1" value="0" />
+        </section>
+
+        <section class="group">
+          <h2>Scale + rotation</h2>
+          <div class="row"><label for="sx">scale x</label><span class="value" id="sxValue">1.00</span></div>
+          <input id="sx" type="range" min="-2.5" max="2.5" step="0.05" value="1" />
+          <div class="row"><label for="sy">scale y</label><span class="value" id="syValue">1.00</span></div>
+          <input id="sy" type="range" min="-2.5" max="2.5" step="0.05" value="1" />
+          <div class="row"><label for="theta">rotation</label><span class="value" id="thetaValue">0°</span></div>
+          <input id="theta" type="range" min="-180" max="180" step="1" value="0" />
+        </section>
+
+        <section class="group">
+          <h2>Reflect + presets</h2>
+          <div class="check-row">
+            <label><input id="reflectX" type="checkbox" /> reflect across x-axis</label>
+            <label><input id="reflectY" type="checkbox" /> reflect across y-axis</label>
+          </div>
+          <div class="button-row">
+            <button id="presetRotate">Rotation preset</button>
+            <button id="presetReflect">Reflection preset</button>
+          </div>
+          <div class="button-row">
+            <button id="playDemo">Animate change</button>
+            <button id="resetAll">Reset</button>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="panel stage-card">
+        <div class="header">
+          <div>
+            <h2>One shape, many transformations</h2>
+            <p>The gray shape is the reference. The purple shape is driven by the current matrix, so separate controls compose into one transform.</p>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><span class="k">Determinant</span><span class="v" id="detOut">1.000</span></div>
+          <div class="stat"><span class="k">Orientation</span><span class="v" id="orientationOut">Preserved</span></div>
+          <div class="stat"><span class="k">Area scale</span><span class="v" id="areaOut">1.000×</span></div>
+          <div class="stat"><span class="k">Order</span><span class="v">S → R → T</span></div>
+        </div>
+
+        <div class="stage">
+          <svg viewBox="0 0 700 580" aria-label="Coordinate plane showing original and transformed polygon">
+            <defs>
+              <pattern id="minorGrid" width="35" height="35" patternUnits="userSpaceOnUse">
+                <path d="M 35 0 L 0 0 0 35" fill="none" stroke="rgba(16,33,58,0.06)" stroke-width="1" />
+              </pattern>
+              <pattern id="majorGrid" width="140" height="140" patternUnits="userSpaceOnUse">
+                <rect width="140" height="140" fill="url(#minorGrid)"></rect>
+                <path d="M 140 0 L 0 0 0 140" fill="none" stroke="rgba(16,33,58,0.12)" stroke-width="1.2" />
+              </pattern>
+            </defs>
+            <rect width="700" height="580" fill="url(#majorGrid)"></rect>
+            <g id="axes">
+              <line x1="0" y1="290" x2="700" y2="290" stroke="rgba(16,33,58,0.25)" stroke-width="2"></line>
+              <line x1="350" y1="0" x2="350" y2="580" stroke="rgba(16,33,58,0.25)" stroke-width="2"></line>
+              <text x="670" y="278" font-size="16" fill="#607086" font-weight="700">x</text>
+              <text x="362" y="22" font-size="16" fill="#607086" font-weight="700">y</text>
+            </g>
+            <g id="tickLabels" font-size="14" fill="#768499" font-weight="650"></g>
+            <g id="reference">
+              <polygon points="350,220 440,310 390,410 280,380 255,280" fill="rgba(16,33,58,0.08)" stroke="rgba(16,33,58,0.34)" stroke-width="3"></polygon>
+            </g>
+            <g id="transformed" class="shape">
+              <polygon points="350,220 440,310 390,410 280,380 255,280" fill="rgba(124,58,237,0.18)" stroke="#7c3aed" stroke-width="4"></polygon>
+              <circle cx="350" cy="220" r="7.5" fill="#7c3aed"></circle>
+            </g>
+          </svg>
+        </div>
+
+        <div class="bottom-dock">
+          <div class="matrix-card">
+            <p class="dock-title">Current matrix</p>
+            <div class="matrix">
+              <table aria-label="Current transformation matrix">
+                <tbody>
+                  <tr><td>a</td><td id="m11">1.000</td><td id="m12">0.000</td><td id="m13">0.000</td></tr>
+                  <tr><td>b</td><td id="m21">0.000</td><td id="m22">1.000</td><td id="m23">0.000</td></tr>
+                  <tr><td>c</td><td id="m31">0.000</td><td id="m32">0.000</td><td id="m33">1.000</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="legend-card">
+            <p class="dock-title">Visual key</p>
+            <div class="legend">
+              <span class="badge"><span class="dot" style="background:rgba(16,33,58,0.35)"></span>Original reference</span>
+              <span class="badge"><span class="dot" style="background:#7c3aed"></span>Transformed shape</span>
+              <span class="badge"><span class="dot" style="background:#06b6d4"></span>Matrix-driven state</span>
+            </div>
+            <p class="micro-note">Use the reference shape and matrix together: the motion is visible, but the transform is inspectable.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const unit = 35;
+    const origin = {x: 350, y: 290};
+    const shapeEl = document.getElementById("transformed");
+    const tickGroup = document.getElementById("tickLabels");
+    const values = ["tx","ty","sx","sy","theta"].reduce((acc, key) => {
+      acc[key] = document.getElementById(key);
+      acc[key + "Value"] = document.getElementById(key + "Value");
+      return acc;
+    }, {});
+    const reflectX = document.getElementById("reflectX");
+    const reflectY = document.getElementById("reflectY");
+    const matrixTargets = {
+      m11: document.getElementById("m11"), m12: document.getElementById("m12"), m13: document.getElementById("m13"),
+      m21: document.getElementById("m21"), m22: document.getElementById("m22"), m23: document.getElementById("m23"),
+      m31: document.getElementById("m31"), m32: document.getElementById("m32"), m33: document.getElementById("m33")
+    };
+    const detOut = document.getElementById("detOut");
+    const orientationOut = document.getElementById("orientationOut");
+    const areaOut = document.getElementById("areaOut");
+
+    function drawTicks() {
+      const frag = document.createDocumentFragment();
+      for (let i = -9; i <= 9; i++) {
+        if (i !== 0) {
+          const x = origin.x + i * unit;
+          const y = origin.y - i * unit;
+          const tx = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          tx.setAttribute("x", x);
+          tx.setAttribute("y", origin.y + 22);
+          tx.setAttribute("text-anchor", "middle");
+          tx.textContent = i;
+          frag.appendChild(tx);
+          const ty = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          ty.setAttribute("x", origin.x - 16);
+          ty.setAttribute("y", y + 5);
+          ty.setAttribute("text-anchor", "end");
+          ty.textContent = i;
+          frag.appendChild(ty);
+        }
+      }
+      tickGroup.appendChild(frag);
+    }
+
+    function format(n, digits = 3) { return Number(n).toFixed(digits); }
+    function getState() {
+      return {
+        tx: parseFloat(values.tx.value), ty: parseFloat(values.ty.value),
+        sx: parseFloat(values.sx.value), sy: parseFloat(values.sy.value),
+        theta: parseFloat(values.theta.value),
+        reflectX: reflectX.checked, reflectY: reflectY.checked
+      };
+    }
+    function buildMatrix(state) {
+      const theta = state.theta * Math.PI / 180;
+      const rx = state.reflectX ? -1 : 1;
+      const ry = state.reflectY ? -1 : 1;
+      const sx = state.sx * rx;
+      const sy = state.sy * ry;
+      const cos = Math.cos(theta);
+      const sin = Math.sin(theta);
+      return {
+        a: sx * cos,
+        b: sx * sin,
+        c: -sy * sin,
+        d: sy * cos,
+        e: state.tx * unit,
+        f: -state.ty * unit
+      };
+    }
+    function currentTransform() {
+      const value = getComputedStyle(shapeEl).transform;
+      return value === "none" ? "matrix(1, 0, 0, 1, 0, 0)" : value;
+    }
+    function render(applyAnimation = false) {
+      const state = getState();
+      values.txValue.textContent = format(state.tx, 2);
+      values.tyValue.textContent = format(state.ty, 2);
+      values.sxValue.textContent = format(state.sx, 2);
+      values.syValue.textContent = format(state.sy, 2);
+      values.thetaValue.textContent = `${Math.round(state.theta)}°`;
+      const matrix = buildMatrix(state);
+      const transformString = `matrix(${matrix.a}, ${matrix.b}, ${matrix.c}, ${matrix.d}, ${matrix.e}, ${matrix.f})`;
+      if (applyAnimation && shapeEl.animate && !reducedMotion) {
+        shapeEl.animate(
+          [{transform: currentTransform()}, {transform: transformString}],
+          {duration: 650, easing: "cubic-bezier(.2,.8,.2,1)", fill: "forwards"}
+        );
+      }
+      shapeEl.style.transform = transformString;
+      const det = matrix.a * matrix.d - matrix.b * matrix.c;
+      detOut.textContent = format(det, 3);
+      orientationOut.textContent = det >= 0 ? "Preserved" : "Reversed";
+      areaOut.textContent = `${format(Math.abs(det), 3)}×`;
+      matrixTargets.m11.textContent = format(matrix.a);
+      matrixTargets.m12.textContent = format(matrix.c);
+      matrixTargets.m13.textContent = format(state.tx);
+      matrixTargets.m21.textContent = format(matrix.b);
+      matrixTargets.m22.textContent = format(matrix.d);
+      matrixTargets.m23.textContent = format(state.ty);
+      matrixTargets.m31.textContent = "0.000";
+      matrixTargets.m32.textContent = "0.000";
+      matrixTargets.m33.textContent = "1.000";
+    }
+    ["tx","ty","sx","sy","theta"].forEach(id => {
+      document.getElementById(id).addEventListener("input", () => render(false));
+    });
+    reflectX.addEventListener("change", () => render(false));
+    reflectY.addEventListener("change", () => render(false));
+    document.getElementById("resetAll").addEventListener("click", () => {
+      values.tx.value = 0; values.ty.value = 0; values.sx.value = 1; values.sy.value = 1; values.theta.value = 0;
+      reflectX.checked = false; reflectY.checked = false; render(true);
+    });
+    document.getElementById("presetRotate").addEventListener("click", () => {
+      values.tx.value = 2.6; values.ty.value = 1.8; values.sx.value = 1.2; values.sy.value = 0.8; values.theta.value = 36;
+      reflectX.checked = false; reflectY.checked = false; render(true);
+    });
+    document.getElementById("presetReflect").addEventListener("click", () => {
+      values.tx.value = -2.4; values.ty.value = 1.1; values.sx.value = 1.45; values.sy.value = 0.9; values.theta.value = -28;
+      reflectX.checked = true; reflectY.checked = false; render(true);
+    });
+    document.getElementById("playDemo").addEventListener("click", () => {
+      const presets = [
+        {tx: 2.5, ty: 0.8, sx: 1.2, sy: 1.2, theta: 25, reflectX: false, reflectY: false},
+        {tx: -3.4, ty: 2.2, sx: -1.3, sy: 0.75, theta: -18, reflectX: false, reflectY: false},
+        {tx: 0.7, ty: -2.4, sx: 1.7, sy: -1.1, theta: 54, reflectX: false, reflectY: false}
+      ];
+      const next = presets[Math.floor(Math.random() * presets.length)];
+      values.tx.value = next.tx; values.ty.value = next.ty; values.sx.value = next.sx; values.sy.value = next.sy; values.theta.value = next.theta;
+      reflectX.checked = next.reflectX; reflectY.checked = next.reflectY; render(true);
+    });
+    drawTicks();
+    render(false);
+  </script>
+</body>
+</html>

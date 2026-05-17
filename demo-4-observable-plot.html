@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo 4 · Probability and Statistics Explorer</title>
+  <style>
+    :root{
+      --bg:#f7f9fd;
+      --panel:#ffffff;
+      --ink:#10233f;
+      --muted:#627287;
+      --line:#dfe6f2;
+      --accent:#0ea5e9;
+      --accent-2:#7c3aed;
+      --accent-3:#22c55e;
+      --shadow:0 18px 45px rgba(16,35,63,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(14,165,233,.08), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(124,58,237,.08), transparent 24%),
+        var(--bg);
+      height:100vh;
+      overflow:hidden;
+    }
+    .wrap{
+      max-width:1500px;
+      height:100vh;
+      margin:0 auto;
+      padding:18px;
+      display:grid;
+      grid-template-columns:340px minmax(0, 1fr);
+      gap:18px;
+    }
+    .panel{
+      background:var(--panel);
+      border:1px solid rgba(16,35,63,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .controls{
+      padding:18px;
+      align-self:stretch;
+      overflow:hidden;
+    }
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(14,165,233,.09);
+      color:var(--accent);
+      font-weight:800;
+      font-size:.8rem;
+    }
+    h1{margin:10px 0 6px;font-size:1.65rem;line-height:1.1}
+    .sub{margin:0 0 12px;color:var(--muted);line-height:1.38;font-size:.94rem}
+    .group{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(246,249,253,.96));
+      margin-top:12px;
+    }
+    .group h2{margin:0 0 12px;font-size:1rem}
+    .row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:12px;
+      margin:7px 0;
+    }
+    label{font-weight:700}
+    select, button{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--line);
+      padding:10px 12px;
+      font:inherit;
+      background:#fff;
+      color:var(--ink);
+    }
+    button{
+      cursor:pointer;
+      font-weight:800;
+      background:linear-gradient(180deg,#fff,#eefbff);
+      margin-top:12px;
+    }
+    input[type="range"]{
+      width:100%;
+      accent-color:var(--accent);
+      margin-top:6px;
+    }
+    .value{
+      min-width:76px;
+      text-align:right;
+      color:var(--accent);
+      font-weight:800;
+      font-feature-settings:"tnum";
+    }
+    .main{
+      min-height:0;
+    }
+    .chart-card{
+      padding:18px;
+      height:calc(100vh - 36px);
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+    .head{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .head h2{margin:0;font-size:1.28rem}
+    .head p{margin:6px 0 0;color:var(--muted);max-width:780px;line-height:1.35;font-size:.94rem}
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(120px, 1fr));
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .stat{
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(245,247,251,.95));
+    }
+    .stat .k{display:block;color:var(--muted);font-size:.82rem;margin-bottom:6px}
+    .stat .v{font-weight:900;font-size:1.18rem;font-feature-settings:"tnum"}
+    .plot-grid{
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);
+      gap:14px;
+      flex:1;
+      min-height:0;
+    }
+    .plot-card{
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:12px;
+      background:linear-gradient(180deg,#fff,#fbfdff);
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+    }
+    .plot-card h3{
+      margin:0 0 10px;
+      font-size:1rem;
+    }
+    .plot-card p{
+      margin:0 0 8px;
+      color:var(--muted);
+      line-height:1.35;
+      font-size:.88rem;
+    }
+    .plot-host{
+      flex:1;
+      min-height:0;
+      display:flex;
+      align-items:stretch;
+    }
+    .plot-host > *{width:100%;height:100%}
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:12px;
+    }
+    .chip{
+      padding:10px 12px;
+      border-radius:999px;
+      background:rgba(16,35,63,.05);
+      font-weight:700;
+    }
+    @media (max-width: 1180px){
+      body{height:auto;overflow:auto}
+      .wrap{grid-template-columns:1fr;height:auto}
+      .controls{height:auto;overflow:visible}
+      .chart-card{height:auto;min-height:760px}
+    }
+    @media (max-width: 860px){
+      .wrap{padding:16px}
+      .stats{grid-template-columns:repeat(2, minmax(120px, 1fr))}
+      .plot-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="panel controls">
+      <div class="eyebrow">Demo 4 · Observable Plot</div>
+      <h1>Probability and Statistics Explorer</h1>
+      <p class="sub">Compare a population with many repeated sample means to watch random trials form a visible pattern.</p>
+
+      <section class="group">
+        <h2>Population settings</h2>
+
+        <div class="row">
+          <label for="populationType">Population type</label>
+          <span class="value" id="populationTypeValue">Normal</span>
+        </div>
+        <select id="populationType">
+          <option value="normal">Normal</option>
+          <option value="uniform">Uniform</option>
+          <option value="bimodal">Bimodal</option>
+          <option value="rightSkewed">Right-skewed</option>
+        </select>
+
+        <div class="row">
+          <label for="mean">Mean</label>
+          <span class="value" id="meanValue">0.00</span>
+        </div>
+        <input id="mean" type="range" min="-4" max="4" step="0.1" value="0" />
+
+        <div class="row">
+          <label for="spread">Spread</label>
+          <span class="value" id="spreadValue">1.20</span>
+        </div>
+        <input id="spread" type="range" min="0.4" max="3" step="0.05" value="1.2" />
+      </section>
+
+      <section class="group">
+        <h2>Sampling settings</h2>
+
+        <div class="row">
+          <label for="sampleSize">Sample size (n)</label>
+          <span class="value" id="sampleSizeValue">8</span>
+        </div>
+        <input id="sampleSize" type="range" min="2" max="60" step="1" value="8" />
+
+        <div class="row">
+          <label for="repetitions">Repeated samples</label>
+          <span class="value" id="repetitionsValue">300</span>
+        </div>
+        <input id="repetitions" type="range" min="50" max="1200" step="25" value="300" />
+
+        <button id="resample">Resample</button>
+        <button id="presetSkew">Load skewed example</button>
+      </section>
+    </aside>
+
+    <main class="main">
+      <section class="panel chart-card">
+        <div class="head">
+          <div>
+            <h2>Population vs. sampling distribution</h2>
+            <p>Change the population, sample size, or repetitions. The left plot shows the source population; the right plot shows the means produced by repeated samples.</p>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="k">Population mean</span>
+            <span class="v" id="popMeanOut">0.000</span>
+          </div>
+          <div class="stat">
+            <span class="k">Population SD</span>
+            <span class="v" id="popSdOut">0.000</span>
+          </div>
+          <div class="stat">
+            <span class="k">Mean of sample means</span>
+            <span class="v" id="sampleMeanOut">0.000</span>
+          </div>
+          <div class="stat">
+            <span class="k">SD of sample means</span>
+            <span class="v" id="sampleSdOut">0.000</span>
+          </div>
+        </div>
+
+        <div class="plot-grid">
+          <div class="plot-card">
+            <h3>Population histogram</h3>
+            <p>One large synthetic population generated from your selected distribution.</p>
+            <div id="populationPlot" class="plot-host"></div>
+          </div>
+          <div class="plot-card">
+            <h3>Distribution of sample means</h3>
+            <p>Each bar summarizes the means from repeated samples of size <span id="nInline">8</span>.</p>
+            <div id="sampleMeansPlot" class="plot-host"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
+  <script>
+    const controls = {
+      populationType: document.getElementById("populationType"),
+      mean: document.getElementById("mean"),
+      spread: document.getElementById("spread"),
+      sampleSize: document.getElementById("sampleSize"),
+      repetitions: document.getElementById("repetitions")
+    };
+
+    const labels = {
+      populationTypeValue: document.getElementById("populationTypeValue"),
+      meanValue: document.getElementById("meanValue"),
+      spreadValue: document.getElementById("spreadValue"),
+      sampleSizeValue: document.getElementById("sampleSizeValue"),
+      repetitionsValue: document.getElementById("repetitionsValue"),
+      popMeanOut: document.getElementById("popMeanOut"),
+      popSdOut: document.getElementById("popSdOut"),
+      sampleMeanOut: document.getElementById("sampleMeanOut"),
+      sampleSdOut: document.getElementById("sampleSdOut"),
+      nInline: document.getElementById("nInline")
+    };
+
+    const POP_SIZE = 5000;
+
+    function state() {
+      return {
+        populationType: controls.populationType.value,
+        mean: parseFloat(controls.mean.value),
+        spread: parseFloat(controls.spread.value),
+        sampleSize: parseInt(controls.sampleSize.value, 10),
+        repetitions: parseInt(controls.repetitions.value, 10)
+      };
+    }
+
+    function format(v, digits = 3) {
+      return Number(v).toFixed(digits);
+    }
+
+    function stats(values) {
+      const mean = d3.mean(values);
+      const sd = Math.sqrt(d3.mean(values.map(v => Math.pow(v - mean, 2))));
+      return {mean, sd};
+    }
+
+    function generatorFor(s) {
+      switch (s.populationType) {
+        case "normal":
+          return () => d3.randomNormal(s.mean, s.spread)();
+        case "uniform":
+          return () => d3.randomUniform(s.mean - 1.8 * s.spread, s.mean + 1.8 * s.spread)();
+        case "bimodal":
+          return () => (Math.random() < 0.5
+            ? d3.randomNormal(s.mean - 1.1 * s.spread, 0.55 * s.spread)()
+            : d3.randomNormal(s.mean + 1.1 * s.spread, 0.55 * s.spread)());
+        case "rightSkewed":
+          return () => s.mean + d3.randomExponential(1 / Math.max(0.15, s.spread))() - s.spread;
+        default:
+          return () => Math.random();
+      }
+    }
+
+    function sampleArray(source, n) {
+      const result = [];
+      for (let i = 0; i < n; i++) {
+        result.push(source[Math.floor(Math.random() * source.length)]);
+      }
+      return result;
+    }
+
+    function clearNode(el) {
+      while (el.firstChild) el.removeChild(el.firstChild);
+    }
+
+    function drawPlots(population, sampleMeans, populationStats, sampleStats) {
+      const popHost = document.getElementById("populationPlot");
+      const sampleHost = document.getElementById("sampleMeansPlot");
+      clearNode(popHost);
+      clearNode(sampleHost);
+
+      const hostWidth = Math.max(360, Math.floor(popHost.getBoundingClientRect().width));
+      const hostHeight = Math.max(300, Math.floor(popHost.getBoundingClientRect().height));
+      const plotHeight = Math.min(420, hostHeight);
+
+      const domain = d3.extent([...population, ...sampleMeans]);
+      const pad = 0.6;
+      const xDomain = [domain[0] - pad, domain[1] + pad];
+
+      const populationPlot = Plot.plot({
+        width: hostWidth,
+        height: plotHeight,
+        marginLeft: 52,
+        marginBottom: 42,
+        x: {label: "Value", domain: xDomain, grid: true},
+        y: {label: "Count", grid: true},
+        color: {legend: false},
+        marks: [
+          Plot.rectY(population, Plot.binX({y: "count"}, {x: d => d, fill: "rgba(14,165,233,0.55)", thresholds: 26})),
+          Plot.ruleX([populationStats.mean], {stroke: "#7c3aed", strokeWidth: 3}),
+          Plot.text([populationStats.mean], {x: d => d, y: 0, text: () => "μ", dy: -8, fill: "#7c3aed", fontWeight: 800})
+        ]
+      });
+
+      const sampleMeansPlot = Plot.plot({
+        width: hostWidth,
+        height: plotHeight,
+        marginLeft: 52,
+        marginBottom: 42,
+        x: {label: "Sample mean", domain: xDomain, grid: true},
+        y: {label: "Count", grid: true},
+        marks: [
+          Plot.rectY(sampleMeans, Plot.binX({y: "count"}, {x: d => d, fill: "rgba(124,58,237,0.45)", thresholds: 24})),
+          Plot.ruleX([sampleStats.mean], {stroke: "#22c55e", strokeWidth: 3}),
+          Plot.text([sampleStats.mean], {x: d => d, y: 0, text: () => "x̄", dy: -8, fill: "#22c55e", fontWeight: 800})
+        ]
+      });
+
+      popHost.appendChild(populationPlot);
+      sampleHost.appendChild(sampleMeansPlot);
+    }
+
+    function render() {
+      const s = state();
+      labels.populationTypeValue.textContent = controls.populationType.options[controls.populationType.selectedIndex].text;
+      labels.meanValue.textContent = format(s.mean, 2);
+      labels.spreadValue.textContent = format(s.spread, 2);
+      labels.sampleSizeValue.textContent = String(s.sampleSize);
+      labels.repetitionsValue.textContent = String(s.repetitions);
+      labels.nInline.textContent = String(s.sampleSize);
+
+      const generator = generatorFor(s);
+      const population = d3.range(POP_SIZE).map(generator);
+      const sampleMeans = d3.range(s.repetitions).map(() => d3.mean(sampleArray(population, s.sampleSize)));
+
+      const popStats = stats(population);
+      const meanStats = stats(sampleMeans);
+
+      labels.popMeanOut.textContent = format(popStats.mean);
+      labels.popSdOut.textContent = format(popStats.sd);
+      labels.sampleMeanOut.textContent = format(meanStats.mean);
+      labels.sampleSdOut.textContent = format(meanStats.sd);
+
+      drawPlots(population, sampleMeans, popStats, meanStats);
+    }
+
+    document.querySelectorAll("input, select").forEach(el => {
+      el.addEventListener("input", render);
+      el.addEventListener("change", render);
+    });
+
+    document.getElementById("resample").addEventListener("click", render);
+
+    document.getElementById("presetSkew").addEventListener("click", () => {
+      controls.populationType.value = "rightSkewed";
+      controls.mean.value = "-0.8";
+      controls.spread.value = "1.4";
+      controls.sampleSize.value = "24";
+      controls.repetitions.value = "700";
+      render();
+    });
+
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(render, 120);
+    });
+
+    render();
+  </script>
+</body>
+</html>

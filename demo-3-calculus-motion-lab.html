@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo 3 · Calculus Motion Lab</title>
+  <style>
+    :root{
+      --bg:#f6f8fc;
+      --panel:#ffffff;
+      --ink:#12223a;
+      --muted:#637287;
+      --line:#dee6f2;
+      --accent:#2563eb;
+      --accent-2:#ef4444;
+      --accent-3:#14b8a6;
+      --accent-4:#f59e0b;
+      --shadow:0 18px 45px rgba(18,34,58,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(37,99,235,.08), transparent 22%),
+        radial-gradient(circle at bottom left, rgba(20,184,166,.08), transparent 24%),
+        var(--bg);
+      min-height:100vh;
+    }
+    .wrap{
+      max-width:1440px;
+      margin:0 auto;
+      padding:18px;
+      display:grid;
+      grid-template-columns:340px 1fr;
+      gap:18px;
+      min-height:100vh;
+    }
+    .panel{
+      background:var(--panel);
+      border:1px solid rgba(18,34,58,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .controls{
+      padding:18px;
+      position:sticky;
+      top:18px;
+      align-self:start;
+    }
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(37,99,235,.08);
+      color:var(--accent);
+      font-weight:800;
+      font-size:.8rem;
+    }
+    h1{margin:10px 0 6px;font-size:1.65rem;line-height:1.1}
+    .sub{margin:0 0 12px;color:var(--muted);line-height:1.4;font-size:.94rem}
+    .tabs{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .tab{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      cursor:pointer;
+      font-weight:800;
+    }
+    .tab.active{
+      background:linear-gradient(180deg, #eff6ff, #dbeafe);
+      border-color:rgba(37,99,235,.18);
+      color:var(--accent);
+    }
+    .group{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,.94), rgba(246,248,252,.95));
+      margin-top:12px;
+    }
+    .group h2{margin:0 0 12px;font-size:1rem}
+    .row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:12px;
+      margin:7px 0;
+    }
+    label{font-weight:700}
+    .value{
+      min-width:76px;
+      text-align:right;
+      color:var(--accent);
+      font-weight:800;
+      font-feature-settings:"tnum";
+    }
+    input[type="range"]{
+      width:100%;
+      accent-color:var(--accent);
+      margin-top:6px;
+    }
+    button{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--line);
+      padding:10px 12px;
+      font:inherit;
+      font-weight:800;
+      background:linear-gradient(180deg,#fff,#eef4ff);
+      cursor:pointer;
+      margin-top:12px;
+    }
+    .main{
+      display:grid;
+      gap:18px;
+      align-self:stretch;
+    }
+    .stage-card{
+      padding:18px;
+      min-height:calc(100vh - 36px);
+      display:flex;
+      flex-direction:column;
+    }
+    .head{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .head h2{margin:0;font-size:1.35rem}
+    .head p{margin:6px 0 0;color:var(--muted);line-height:1.35;max-width:780px;font-size:.95rem}
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(120px, 1fr));
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .stat{
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(245,247,251,.95));
+    }
+    .stat .k{display:block;color:var(--muted);font-size:.82rem;margin-bottom:6px}
+    .stat .v{font-weight:900;font-size:1.18rem;font-feature-settings:"tnum"}
+    #viz{
+      width:100%;
+      flex:1 1 auto;
+      min-height:430px;
+      height:clamp(430px, calc(100vh - 255px), 610px);
+      border:1px solid var(--line);
+      border-radius:22px;
+      overflow:hidden;
+      background:linear-gradient(180deg,#fff,#fbfdff);
+    }
+    svg{width:100%;height:100%;display:block}
+    .legend{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+      align-items:center;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(18,34,58,.05);
+      color:var(--muted);
+      font-size:.84rem;
+      font-weight:800;
+    }
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      display:inline-block;
+    }
+    .dot.curve{background:var(--accent)}
+    .dot.secant{background:var(--accent-2)}
+    .dot.point{background:var(--accent-3)}
+    .dot.rect{background:var(--accent-4)}
+    @media (max-width: 1160px){
+      .wrap{grid-template-columns:1fr}
+      .controls{position:relative;top:0}
+    }
+    @media (max-width: 760px){
+      .wrap{padding:16px}
+      .stats{grid-template-columns:repeat(2, minmax(120px, 1fr))}
+      #viz{height:520px;min-height:420px}
+      svg{height:100%}
+      .tabs{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="panel controls">
+      <div class="eyebrow">Demo 3 · D3</div>
+      <h1>Calculus Motion Lab</h1>
+      <p class="sub">Show derivatives and integrals as approximation in motion, not static notation.</p>
+
+      <div class="tabs">
+        <button class="tab active" data-mode="derivative">Derivative mode</button>
+        <button class="tab" data-mode="integral">Integral mode</button>
+      </div>
+
+      <section class="group">
+        <h2>Shared controls</h2>
+
+        <div class="row">
+          <label for="focusX">Focus x</label>
+          <span class="value" id="focusXValue">1.50</span>
+        </div>
+        <input id="focusX" type="range" min="-5.5" max="5.5" step="0.01" value="1.5" />
+
+        <div class="row">
+          <label for="h">h offset</label>
+          <span class="value" id="hValue">1.20</span>
+        </div>
+        <input id="h" type="range" min="0.05" max="3" step="0.01" value="1.2" />
+
+        <div class="row">
+          <label for="nRects">Rectangles</label>
+          <span class="value" id="nRectsValue">8</span>
+        </div>
+        <input id="nRects" type="range" min="2" max="40" step="1" value="8" />
+
+        <button id="animateBtn">Animate toward the limit</button>
+        <button id="presetBtn">Load a punchier preset</button>
+      </section>
+    </aside>
+
+    <main class="main">
+      <section class="panel stage-card">
+        <div class="head">
+          <div>
+            <h2 id="modeTitle">Secant line approaching the tangent</h2>
+            <p id="modeDescription">The blue curve is the function. The red secant line uses two nearby points. As h shrinks, the secant approaches the tangent and the slope estimate stabilizes.</p>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="k">f(x₀)</span>
+            <span class="v" id="fx0Out">0.000</span>
+          </div>
+          <div class="stat">
+            <span class="k" id="secondMetricLabel">f(x₀+h)</span>
+            <span class="v" id="fx1Out">0.000</span>
+          </div>
+          <div class="stat">
+            <span class="k" id="thirdMetricLabel">Secant slope</span>
+            <span class="v" id="slopeOut">0.000</span>
+          </div>
+          <div class="stat">
+            <span class="k" id="fourthMetricLabel">Approx. area</span>
+            <span class="v" id="areaOut">0.000</span>
+          </div>
+        </div>
+
+        <div id="viz"></div>
+        <div class="legend" aria-label="Calculus visual legend">
+          <span class="badge"><span class="dot curve"></span>Function</span>
+          <span class="badge"><span class="dot secant"></span>Secant / tangent</span>
+          <span class="badge"><span class="dot point"></span>Sampled points</span>
+          <span class="badge"><span class="dot rect"></span>Riemann rectangles</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script>
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const width = 960;
+    const height = 620;
+    const margin = {top: 32, right: 28, bottom: 54, left: 74};
+
+    const controls = {
+      focusX: document.getElementById("focusX"),
+      h: document.getElementById("h"),
+      nRects: document.getElementById("nRects")
+    };
+
+    const labels = {
+      focusXValue: document.getElementById("focusXValue"),
+      hValue: document.getElementById("hValue"),
+      nRectsValue: document.getElementById("nRectsValue"),
+      modeTitle: document.getElementById("modeTitle"),
+      modeDescription: document.getElementById("modeDescription"),
+      secondMetricLabel: document.getElementById("secondMetricLabel"),
+      thirdMetricLabel: document.getElementById("thirdMetricLabel"),
+      fourthMetricLabel: document.getElementById("fourthMetricLabel"),
+      fx0Out: document.getElementById("fx0Out"),
+      fx1Out: document.getElementById("fx1Out"),
+      slopeOut: document.getElementById("slopeOut"),
+      areaOut: document.getElementById("areaOut")
+    };
+
+    let mode = "derivative";
+    let animationFrame = null;
+
+    function f(x) {
+      return 0.12 * Math.pow(x, 3) - 0.9 * x + 1.2 * Math.sin(1.4 * x);
+    }
+
+    const x = d3.scaleLinear().domain([-6, 6]).range([margin.left, width - margin.right]);
+    const y = d3.scaleLinear().domain([-8, 8]).range([height - margin.bottom, margin.top]);
+
+    const svg = d3.select("#viz")
+      .append("svg")
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("aria-label", "Calculus visualization with line graph, secant line, tangent approximation, and Riemann rectangles");
+
+    const gridX = d3.axisBottom(x).tickSize(-(height - margin.top - margin.bottom)).tickFormat("");
+    const gridY = d3.axisLeft(y).tickSize(-(width - margin.left - margin.right)).tickFormat("");
+
+    svg.append("g")
+      .attr("class", "grid x-grid")
+      .attr("transform", `translate(0,${height - margin.bottom})`)
+      .call(gridX)
+      .call(g => g.selectAll("line").attr("stroke", "rgba(18,34,58,0.08)"))
+      .call(g => g.select(".domain").remove());
+
+    svg.append("g")
+      .attr("class", "grid y-grid")
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(gridY)
+      .call(g => g.selectAll("line").attr("stroke", "rgba(18,34,58,0.08)"))
+      .call(g => g.select(".domain").remove());
+
+    svg.append("g")
+      .attr("transform", `translate(0,${height - margin.bottom})`)
+      .call(d3.axisBottom(x))
+      .call(g => g.selectAll("text").attr("fill", "#637287"))
+      .call(g => g.selectAll("path,line").attr("stroke", "rgba(18,34,58,0.18)"));
+
+    svg.append("g")
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y))
+      .call(g => g.selectAll("text").attr("fill", "#637287"))
+      .call(g => g.selectAll("path,line").attr("stroke", "rgba(18,34,58,0.18)"));
+
+    svg.append("text")
+      .attr("x", width - margin.right)
+      .attr("y", height - 18)
+      .attr("text-anchor", "end")
+      .attr("fill", "#637287")
+      .attr("font-weight", 700)
+      .text("x");
+
+    svg.append("text")
+      .attr("x", margin.left + 12)
+      .attr("y", margin.top - 10)
+      .attr("fill", "#637287")
+      .attr("font-weight", 700)
+      .text("y");
+
+    const plotLayer = svg.append("g");
+    const rectLayer = plotLayer.append("g");
+    const curvePath = plotLayer.append("path")
+      .attr("fill", "none")
+      .attr("stroke", "#2563eb")
+      .attr("stroke-width", 4);
+
+    const secantPath = plotLayer.append("path")
+      .attr("fill", "none")
+      .attr("stroke", "#ef4444")
+      .attr("stroke-width", 3)
+      .attr("stroke-linecap", "round");
+
+    const point0 = plotLayer.append("circle").attr("r", 7).attr("fill", "#14b8a6");
+    const point1 = plotLayer.append("circle").attr("r", 7).attr("fill", "#ef4444");
+    const areaText = plotLayer.append("text")
+      .attr("x", width - margin.right)
+      .attr("y", margin.top + 18)
+      .attr("text-anchor", "end")
+      .attr("font-size", 16)
+      .attr("font-weight", 800)
+      .attr("fill", "#12223a");
+
+    const lineGenerator = d3.line()
+      .x(d => x(d.x))
+      .y(d => y(d.y));
+
+    const samples = d3.range(-6, 6.01, 0.04).map(v => ({x: v, y: f(v)}));
+    curvePath.attr("d", lineGenerator(samples));
+
+    function format(v, digits = 3) {
+      return Number(v).toFixed(digits);
+    }
+
+    function state() {
+      return {
+        focusX: parseFloat(controls.focusX.value),
+        h: parseFloat(controls.h.value),
+        nRects: parseInt(controls.nRects.value, 10)
+      };
+    }
+
+    function render(duration = 320) {
+      const s = state();
+      labels.focusXValue.textContent = format(s.focusX, 2);
+      labels.hValue.textContent = format(s.h, 2);
+      labels.nRectsValue.textContent = String(s.nRects);
+
+      const x0 = s.focusX;
+      const x1 = Math.min(6, x0 + s.h);
+      const y0 = f(x0);
+      const y1 = f(x1);
+      const slope = (y1 - y0) / (x1 - x0);
+
+      const tangent = xx => y0 + slope * (xx - x0);
+      const secantLineData = [
+        {x: -6, y: tangent(-6)},
+        {x: 6, y: tangent(6)}
+      ];
+
+      const transition = svg.transition()
+        .duration(reducedMotion ? 0 : duration)
+        .ease(d3.easeCubicOut);
+
+      point0.transition(transition).attr("cx", x(x0)).attr("cy", y(y0));
+      point1.transition(transition).attr("cx", x(x1)).attr("cy", y(y1));
+
+      if (mode === "derivative") {
+        rectLayer.selectAll("rect").transition(transition).attr("opacity", 0).remove();
+        secantPath.transition(transition).attr("d", lineGenerator(secantLineData)).attr("opacity", 1);
+        point1.transition(transition).attr("opacity", 1);
+        areaText.text(`h = ${format(s.h, 3)}`);
+        labels.modeTitle.textContent = "Secant line approaching the tangent";
+        labels.modeDescription.textContent = "The blue curve is the function. The red secant line uses two nearby points. As h shrinks, the secant approaches the tangent and the slope estimate stabilizes.";
+        labels.secondMetricLabel.textContent = "f(x₀+h)";
+        labels.thirdMetricLabel.textContent = "Secant slope";
+        labels.fourthMetricLabel.textContent = "Current h";
+        labels.fx0Out.textContent = format(y0);
+        labels.fx1Out.textContent = format(y1);
+        labels.slopeOut.textContent = format(slope);
+        labels.areaOut.textContent = format(s.h);
+      } else {
+        const a = -3.5;
+        const b = x0;
+        const rectWidth = (b - a) / s.nRects;
+        const rectData = d3.range(s.nRects).map(i => {
+          const left = a + i * rectWidth;
+          const mid = left + rectWidth / 2;
+          const heightVal = f(mid);
+          return {
+            left,
+            mid,
+            heightVal,
+            width: rectWidth
+          };
+        });
+        const area = d3.sum(rectData, d => d.heightVal * d.width);
+
+        const rects = rectLayer.selectAll("rect").data(rectData, d => d.left);
+        rects.enter()
+          .append("rect")
+          .attr("x", d => x(d.left))
+          .attr("width", d => x(d.left + d.width) - x(d.left))
+          .attr("y", y(0))
+          .attr("height", 0)
+          .attr("fill", "rgba(245,158,11,0.22)")
+          .attr("stroke", "#f59e0b")
+          .attr("stroke-width", 1.5)
+          .merge(rects)
+          .transition(transition)
+          .attr("x", d => x(d.left))
+          .attr("width", d => x(d.left + d.width) - x(d.left))
+          .attr("y", d => d.heightVal >= 0 ? y(d.heightVal) : y(0))
+          .attr("height", d => Math.abs(y(d.heightVal) - y(0)))
+          .attr("opacity", 1);
+
+        rects.exit().transition(transition).attr("opacity", 0).remove();
+
+        secantPath.transition(transition).attr("opacity", 0);
+        point1.transition(transition).attr("opacity", 0);
+        areaText.text(`Left bound = -3.5, right bound = ${format(b, 2)}`);
+        labels.modeTitle.textContent = "Riemann rectangles approximating area";
+        labels.modeDescription.textContent = "The amber rectangles are midpoint samples under the same curve. Increase the rectangle count to make the approximation more stable.";
+        labels.secondMetricLabel.textContent = "Upper bound";
+        labels.thirdMetricLabel.textContent = "Rectangles";
+        labels.fourthMetricLabel.textContent = "Approx. area";
+        labels.fx0Out.textContent = format(y0);
+        labels.fx1Out.textContent = format(b);
+        labels.slopeOut.textContent = String(s.nRects);
+        labels.areaOut.textContent = format(area);
+      }
+    }
+
+    document.querySelectorAll(".tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+        btn.classList.add("active");
+        mode = btn.dataset.mode;
+        render();
+      });
+    });
+
+    Object.values(controls).forEach(control => control.addEventListener("input", render));
+
+    document.getElementById("presetBtn").addEventListener("click", () => {
+      controls.focusX.value = "2.85";
+      controls.h.value = "0.62";
+      controls.nRects.value = "18";
+      render();
+    });
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function animateDerivativeLimit() {
+      const startH = parseFloat(controls.h.value);
+      const endH = 0.06;
+      const durationMs = reducedMotion ? 0 : 2400;
+      const startTime = performance.now();
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const t = durationMs === 0 ? 1 : Math.min(1, elapsed / durationMs);
+        const eased = easeOutCubic(t);
+
+        const currentH = startH + (endH - startH) * eased;
+        controls.h.value = currentH.toFixed(3);
+
+        // During the animation, requestAnimationFrame is already producing
+        // the motion, so render immediately instead of starting a new D3
+        // transition on every frame.
+        render(0);
+
+        if (t < 1) {
+          animationFrame = requestAnimationFrame(step);
+        }
+      }
+
+      animationFrame = requestAnimationFrame(step);
+    }
+
+    function animateIntegralLimit() {
+      const startRects = parseInt(controls.nRects.value, 10);
+      const endRects = 40;
+      const durationMs = reducedMotion ? 0 : 2400;
+      const startTime = performance.now();
+      let lastRects = startRects;
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const t = durationMs === 0 ? 1 : Math.min(1, elapsed / durationMs);
+        const eased = easeOutCubic(t);
+
+        const currentRects = Math.round(startRects + (endRects - startRects) * eased);
+
+        // Rectangle count is discrete, so only rerender when the integer
+        // count actually changes. A short transition makes each step readable.
+        if (currentRects !== lastRects || t === 1) {
+          controls.nRects.value = currentRects;
+          render(140);
+          lastRects = currentRects;
+        }
+
+        if (t < 1) {
+          animationFrame = requestAnimationFrame(step);
+        }
+      }
+
+      animationFrame = requestAnimationFrame(step);
+    }
+
+    document.getElementById("animateBtn").addEventListener("click", () => {
+      cancelAnimationFrame(animationFrame);
+
+      if (mode === "derivative") {
+        animateDerivativeLimit();
+      } else {
+        animateIntegralLimit();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

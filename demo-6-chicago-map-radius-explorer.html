@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo 5 · Chicago Map Radius Explorer</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <style>
+    :root {
+      --bg: #f6f8fc;
+      --panel: #ffffff;
+      --ink: #12223a;
+      --muted: #637287;
+      --line: #dee6f2;
+      --accent: #2563eb;
+      --accent-2: #14b8a6;
+      --accent-3: #f59e0b;
+      --accent-4: #ef4444;
+      --shadow: 0 18px 45px rgba(18, 34, 58, 0.08);
+      --radius: 22px;
+      --card-grad: linear-gradient(180deg, rgba(255,255,255,.96), rgba(246,248,252,.96));
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 22%),
+        radial-gradient(circle at bottom left, rgba(20, 184, 166, 0.08), transparent 24%),
+        var(--bg);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .wrap {
+      max-width: 1500px;
+      margin: 0 auto;
+      height: 100vh;
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 335px minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(18, 34, 58, 0.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      padding: 18px;
+      align-self: stretch;
+      overflow: hidden;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.08);
+      color: var(--accent);
+      font-weight: 800;
+      font-size: .8rem;
+      letter-spacing: .02em;
+    }
+
+    h1 { margin: 10px 0 6px; font-size: 1.58rem; line-height: 1.08; }
+    .sub { margin: 0 0 12px; color: var(--muted); line-height: 1.36; font-size: .92rem; }
+
+    .group {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+      background: var(--card-grad);
+      margin-top: 12px;
+    }
+
+    .group h2 { margin: 0 0 12px; font-size: 1rem; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      margin: 7px 0;
+    }
+
+    label { font-weight: 700; }
+
+    .value {
+      min-width: 92px;
+      text-align: right;
+      color: var(--accent);
+      font-weight: 800;
+      font-feature-settings: "tnum";
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      margin-top: 6px;
+    }
+
+    .check-row {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .check-row label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    select, button {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      font: inherit;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 800;
+      background: linear-gradient(180deg, #ffffff, #eef4ff);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .button-row.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .main {
+      min-height: 0;
+    }
+
+    .stage-card { padding: 18px; height: calc(100vh - 36px); min-height: 0; display: flex; flex-direction: column; }
+
+    .head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .head h2 { margin: 0; font-size: 1.26rem; }
+    .head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      line-height: 1.34;
+      max-width: 900px;
+      font-size: .94rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(105px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(245,247,251,.95));
+    }
+
+    .stat .k {
+      display: block;
+      color: var(--muted);
+      font-size: .82rem;
+      margin-bottom: 6px;
+    }
+
+    .stat .v {
+      font-weight: 900;
+      font-size: 1.15rem;
+      font-feature-settings: "tnum";
+    }
+
+    .map-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 14px;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .distance-panel {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(180deg,#fff,#fbfdff);
+    }
+
+    .distance-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+
+    .distance-panel p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      line-height: 1.34;
+      font-size: .88rem;
+    }
+
+    .leaflet-control-attribution {
+      font-size: 11px;
+    }
+
+    .lower-grid {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 24px;
+    }
+
+    .card { padding: 20px 22px; }
+
+    .card h2 { margin: 0 0 10px; font-size: 1.1rem; }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .distance-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .distance-item {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 9px 11px;
+      background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(247,249,253,.96));
+    }
+
+    .distance-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+
+    .distance-name {
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .88rem;
+    }
+
+    .distance-meta {
+      color: var(--muted);
+      font-size: .78rem;
+      text-align: right;
+      font-feature-settings: "tnum";
+    }
+
+    .distance-bar {
+      position: relative;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(18, 34, 58, 0.08);
+      overflow: hidden;
+    }
+
+    .distance-fill,
+    .distance-threshold {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .distance-fill {
+      background: linear-gradient(90deg, rgba(37, 99, 235, 0.78), rgba(20, 184, 166, 0.82));
+      opacity: .35;
+    }
+
+    .distance-threshold {
+      background: linear-gradient(90deg, #2563eb, #14b8a6);
+      width: 0;
+      transition: width .16s linear;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 9px;
+      border-radius: 999px;
+      background: rgba(18, 34, 58, 0.05);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: .82rem;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .chips {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .chip {
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(18, 34, 58, 0.05);
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .mini {
+      padding: 9px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(246,248,252,.95));
+    }
+
+    .mini .label {
+      display: block;
+      font-size: .82rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .mini .number {
+      font-size: 1.06rem;
+      font-weight: 900;
+      color: var(--ink);
+      font-feature-settings: "tnum";
+    }
+
+    .hint {
+      margin-top: 12px;
+      color: #35527a;
+      font-size: .86rem;
+      line-height: 1.35;
+    }
+
+    .origin-pin,
+    .poi-pin {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 0 2px rgba(18, 34, 58, 0.08), 0 10px 20px rgba(18, 34, 58, 0.18);
+    }
+
+    .origin-pin {
+      background: #2563eb;
+      width: 18px;
+      height: 18px;
+    }
+
+    .poi-pin { background: #94a3b8; }
+    .poi-pin.active { background: #14b8a6; }
+    .poi-pin.next { background: #f59e0b; }
+    .poi-pin.out { background: #ef4444; }
+
+    .leaflet-popup-content {
+      margin: 12px 14px;
+      line-height: 1.5;
+    }
+
+    .popup-title {
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .popup-meta {
+      color: #5f7088;
+      font-size: .92rem;
+    }
+
+    @media (max-width: 1200px) {
+      body { height: auto; overflow: auto; }
+      .wrap { grid-template-columns: 1fr; height: auto; }
+      .controls { height: auto; overflow: visible; }
+      .stage-card { height: auto; min-height: 780px; }
+      .map-grid { grid-template-columns: 1fr; }
+      #map { height: 520px; }
+      .lower-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .wrap { padding: 16px; }
+      .stats { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      #map { height: 520px; }
+      .button-row,
+      .button-row.three { grid-template-columns: 1fr; }
+      .mini-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      button,
+      .distance-threshold { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="panel controls">
+      <div class="eyebrow">Demo 5 · Leaflet</div>
+      <h1>Chicago Map Radius Explorer</h1>
+      <p class="sub">Start near the JS Tek venue, then play a growing radius wave to see which Chicago-area places become reachable.</p>
+
+      <section class="group">
+        <h2>Wave controls</h2>
+
+        <div class="row">
+          <label for="radiusKm">Target radius</label>
+          <span class="value" id="radiusKmValue">3.50 km</span>
+        </div>
+        <input id="radiusKm" type="range" min="1" max="35" step="0.5" value="3.5" />
+
+        <div class="row">
+          <label for="speedKmh">Travel speed</label>
+          <span class="value" id="speedKmhValue">18 km/h</span>
+        </div>
+        <input id="speedKmh" type="range" min="4" max="70" step="1" value="18" />
+
+        <div class="row">
+          <label for="duration">Wave duration</label>
+          <span class="value" id="durationValue">6.0 s</span>
+        </div>
+        <input id="duration" type="range" min="2" max="14" step="0.5" value="6" />
+
+        <div class="button-row">
+          <button id="playWave">Play wave</button>
+          <button id="resetWave">Reset wave</button>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>Display options</h2>
+        <div class="check-row">
+          <label><input id="autoFit" type="checkbox" checked /> auto-fit to current radius</label>
+          <label><input id="showLines" type="checkbox" checked /> show connection lines</label>
+          <label><input id="showLabels" type="checkbox" checked /> show labels in popups and list</label>
+        </div>
+
+        <div class="hint">Click the map or drag the origin to recalculate distances from a new Chicago-area starting point.</div>
+      </section>
+
+      <section class="group">
+        <h2>Presets</h2>
+        <div class="button-row three">
+          <button data-preset="core">Venue</button>
+          <button data-preset="airport">Airport</button>
+          <button data-preset="downtown">Downtown</button>
+        </div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <section class="panel stage-card">
+        <div class="head">
+          <div>
+            <h2>Distance becomes reachability</h2>
+            <p>The blue point is the origin. The radius grows in meters, and each Chicago-area location activates when the wave reaches its distance from the origin.</p>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="k">Current radius</span>
+            <span class="v" id="currentRadiusOut">0.00 km</span>
+          </div>
+          <div class="stat">
+            <span class="k">Activated places</span>
+            <span class="v" id="activatedOut">0 / 14</span>
+          </div>
+          <div class="stat">
+            <span class="k">Next place</span>
+            <span class="v" id="nextPlaceOut">Fashion Outlets</span>
+          </div>
+          <div class="stat">
+            <span class="k">Time to edge</span>
+            <span class="v" id="timeEdgeOut">12.0 min</span>
+          </div>
+          <div class="stat">
+            <span class="k">Origin</span>
+            <span class="v" id="originOut">JS Tek venue</span>
+          </div>
+        </div>
+
+        <div class="map-grid">
+          <div id="map" aria-label="Interactive map showing an origin point, an animated radius circle, and nearby places"></div>
+
+          <section class="distance-panel">
+            <h2>Distance ladder</h2>
+            <p>The map shows reachability spatially. This list shows the same threshold as an ordered comparison.</p>
+            <div id="distanceList" class="distance-list"></div>
+            <div class="legend">
+              <span class="badge"><span class="dot" style="background:#2563eb"></span>Origin</span>
+              <span class="badge"><span class="dot" style="background:#14b8a6"></span>Activated</span>
+              <span class="badge"><span class="dot" style="background:#f59e0b"></span>Next</span>
+              <span class="badge"><span class="dot" style="background:#ef4444"></span>Outside</span>
+            </div>
+
+            <div class="mini-grid">
+              <div class="mini">
+                <span class="label">Farthest place</span>
+                <span class="number" id="farthestOut">Willis Tower</span>
+              </div>
+              <div class="mini">
+                <span class="label">Max distance</span>
+                <span class="number" id="maxDistanceOut">0.00 km</span>
+              </div>
+              <div class="mini">
+                <span class="label">Average distance</span>
+                <span class="number" id="avgDistanceOut">0.00 km</span>
+              </div>
+              <div class="mini">
+                <span class="label">Fastest arrival</span>
+                <span class="number" id="fastestOut">0.0 min</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script>
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const controls = {
+      radiusKm: document.getElementById('radiusKm'),
+      speedKmh: document.getElementById('speedKmh'),
+      duration: document.getElementById('duration'),
+      autoFit: document.getElementById('autoFit'),
+      showLines: document.getElementById('showLines'),
+      showLabels: document.getElementById('showLabels')
+    };
+
+    const outputs = {
+      radiusKmValue: document.getElementById('radiusKmValue'),
+      speedKmhValue: document.getElementById('speedKmhValue'),
+      durationValue: document.getElementById('durationValue'),
+      currentRadiusOut: document.getElementById('currentRadiusOut'),
+      activatedOut: document.getElementById('activatedOut'),
+      nextPlaceOut: document.getElementById('nextPlaceOut'),
+      timeEdgeOut: document.getElementById('timeEdgeOut'),
+      originOut: document.getElementById('originOut'),
+      farthestOut: document.getElementById('farthestOut'),
+      maxDistanceOut: document.getElementById('maxDistanceOut'),
+      avgDistanceOut: document.getElementById('avgDistanceOut'),
+      fastestOut: document.getElementById('fastestOut')
+    };
+
+    const distanceList = document.getElementById('distanceList');
+
+    const originPresets = {
+      core: { lat: 41.99726, lng: -87.88348, label: 'JS Tek venue' },
+      airport: { lat: 41.98030, lng: -87.90900, label: "O'Hare Terminal 1" },
+      downtown: { lat: 41.88260, lng: -87.62260, label: 'Millennium Park' }
+    };
+
+    const placeData = {
+      type: 'FeatureCollection',
+      features: [
+        { type: 'Feature', properties: { name: "O'Hare Terminal 1", kind: 'Airport' }, geometry: { type: 'Point', coordinates: [-87.9090, 41.9803] } },
+        { type: 'Feature', properties: { name: 'Allstate Arena', kind: 'Arena' }, geometry: { type: 'Point', coordinates: [-87.8877, 42.0053] } },
+        { type: 'Feature', properties: { name: 'Fashion Outlets of Chicago', kind: 'Shopping' }, geometry: { type: 'Point', coordinates: [-87.8662, 41.9753] } },
+        { type: 'Feature', properties: { name: 'Donald E. Stephens Convention Center', kind: 'Convention center' }, geometry: { type: 'Point', coordinates: [-87.8617, 41.9789] } },
+        { type: 'Feature', properties: { name: 'Rosemont Theatre', kind: 'Theatre' }, geometry: { type: 'Point', coordinates: [-87.8657, 41.9769] } },
+        { type: 'Feature', properties: { name: 'Parkway Bank Park', kind: 'Entertainment district' }, geometry: { type: 'Point', coordinates: [-87.8696, 41.9782] } },
+        { type: 'Feature', properties: { name: 'Rosemont CTA Blue Line', kind: 'Transit' }, geometry: { type: 'Point', coordinates: [-87.8594, 41.9835] } },
+        { type: 'Feature', properties: { name: 'Rivers Casino Des Plaines', kind: 'Entertainment' }, geometry: { type: 'Point', coordinates: [-87.8876, 42.0122] } },
+        { type: 'Feature', properties: { name: 'Wrigley Field', kind: 'Stadium' }, geometry: { type: 'Point', coordinates: [-87.6553, 41.9484] } },
+        { type: 'Feature', properties: { name: 'Lincoln Park Zoo', kind: 'Zoo' }, geometry: { type: 'Point', coordinates: [-87.6335, 41.9217] } },
+        { type: 'Feature', properties: { name: 'Navy Pier', kind: 'Landmark' }, geometry: { type: 'Point', coordinates: [-87.6078, 41.8917] } },
+        { type: 'Feature', properties: { name: 'Millennium Park', kind: 'Landmark' }, geometry: { type: 'Point', coordinates: [-87.6226, 41.8826] } },
+        { type: 'Feature', properties: { name: 'Willis Tower', kind: 'Landmark' }, geometry: { type: 'Point', coordinates: [-87.6359, 41.8789] } },
+        { type: 'Feature', properties: { name: 'United Center', kind: 'Arena' }, geometry: { type: 'Point', coordinates: [-87.6742, 41.8807] } }
+      ]
+    };
+
+    let origin = { ...originPresets.core };
+    let currentRadiusMeters = 0;
+    let animationId = null;
+    let lastFrameTime = null;
+
+    const isFileProtocol = window.location.protocol === 'file:';
+
+    const map = L.map('map', { zoomControl: true, preferCanvas: true }).setView([origin.lat, origin.lng], 13);
+
+    if (isFileProtocol) {
+      document.body.classList.add('file-protocol-mode');
+    }
+
+    const baseLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors',
+      referrerPolicy: 'strict-origin-when-cross-origin'
+    });
+
+    if (!isFileProtocol) {
+      baseLayer.addTo(map);
+    }
+
+    const originIcon = L.divIcon({ className: '', html: '<div class="origin-pin"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
+
+    function pointIcon(state) {
+      return L.divIcon({
+        className: '',
+        html: `<div class="poi-pin ${state}"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      });
+    }
+
+    const connectionLayer = L.layerGroup().addTo(map);
+    const markerLayer = L.layerGroup().addTo(map);
+    const helperLayer = L.layerGroup().addTo(map);
+
+    const originMarker = L.marker([origin.lat, origin.lng], {
+      icon: originIcon,
+      draggable: true,
+      zIndexOffset: 1000
+    }).addTo(helperLayer);
+
+    const rippleCircle = L.circle([origin.lat, origin.lng], {
+      radius: 0,
+      color: '#2563eb',
+      weight: 3,
+      fillColor: '#2563eb',
+      fillOpacity: 0.10
+    }).addTo(helperLayer);
+
+    const haloCircle = L.circle([origin.lat, origin.lng], {
+      radius: 0,
+      color: '#14b8a6',
+      weight: 2,
+      opacity: 0.55,
+      fillOpacity: 0
+    }).addTo(helperLayer);
+
+    const pointRecords = placeData.features.map((feature) => {
+      const [lng, lat] = feature.geometry.coordinates;
+      const marker = L.marker([lat, lng], { icon: pointIcon('out') }).addTo(markerLayer);
+      marker.bindPopup('');
+      return {
+        name: feature.properties.name,
+        kind: feature.properties.kind,
+        lat,
+        lng,
+        latlng: L.latLng(lat, lng),
+        marker,
+        line: null,
+        distance: 0,
+        timeMinutes: 0,
+        state: 'out'
+      };
+    });
+
+    function format(value, digits = 2) {
+      return Number(value).toFixed(digits);
+    }
+
+    function kmToMeters(km) {
+      return km * 1000;
+    }
+
+    function metersToKm(meters, digits = 2) {
+      return `${format(meters / 1000, digits)} km`;
+    }
+
+    function speedMetersPerSecond() {
+      return (parseFloat(controls.speedKmh.value) * 1000) / 3600;
+    }
+
+    function targetRadiusMeters() {
+      return kmToMeters(parseFloat(controls.radiusKm.value));
+    }
+
+    function refreshLabels() {
+      outputs.radiusKmValue.textContent = `${format(controls.radiusKm.value, 2)} km`;
+      outputs.speedKmhValue.textContent = `${parseInt(controls.speedKmh.value, 10)} km/h`;
+      outputs.durationValue.textContent = `${format(controls.duration.value, 1)} s`;
+    }
+
+    function popupHtml(record) {
+      return `
+        <div class="popup-title">${record.name}</div>
+        <div class="popup-meta">${record.kind}</div>
+        <div class="popup-meta">Distance: ${metersToKm(record.distance, 2)}</div>
+        <div class="popup-meta">Travel time: ${format(record.timeMinutes, 1)} min</div>
+      `;
+    }
+
+    function computeDistances() {
+      const from = L.latLng(origin.lat, origin.lng);
+      const metersPerSecond = speedMetersPerSecond();
+      pointRecords.forEach((record) => {
+        record.distance = from.distanceTo(record.latlng);
+        record.timeMinutes = (record.distance / metersPerSecond) / 60;
+      });
+      pointRecords.sort((a, b) => a.distance - b.distance);
+    }
+
+    function fitToScene() {
+      if (!controls.autoFit.checked) return;
+      const bounds = L.latLngBounds([origin.lat, origin.lng], [origin.lat, origin.lng]);
+      pointRecords.forEach((record) => bounds.extend(record.latlng));
+      if (currentRadiusMeters > 0) {
+        bounds.extend(rippleCircle.getBounds());
+      }
+      map.fitBounds(bounds.pad(0.12), { animate: !reducedMotion, duration: 0.45 });
+    }
+
+    function setOrigin(latlng, label = 'Custom origin', shouldFit = true) {
+      origin = { lat: latlng.lat, lng: latlng.lng, label };
+      originMarker.setLatLng(latlng);
+      rippleCircle.setLatLng(latlng);
+      haloCircle.setLatLng(latlng);
+      outputs.originOut.textContent = label;
+      computeDistances();
+      updateScene(shouldFit);
+    }
+
+    function stopAnimation() {
+      if (animationId) cancelAnimationFrame(animationId);
+      animationId = null;
+      lastFrameTime = null;
+    }
+
+    function updateMarkerStates() {
+      connectionLayer.clearLayers();
+      const showLines = controls.showLines.checked;
+      const originLatLng = L.latLng(origin.lat, origin.lng);
+
+      pointRecords.forEach((record, index) => {
+        const isActive = currentRadiusMeters >= record.distance;
+        const isNext = !isActive && index === pointRecords.findIndex(r => currentRadiusMeters < r.distance);
+        record.state = isActive ? 'active' : (isNext ? 'next' : 'out');
+        record.marker.setIcon(pointIcon(record.state));
+        record.marker.setPopupContent(popupHtml(record));
+
+        if (showLines && isActive) {
+          const line = L.polyline([originLatLng, record.latlng], {
+            color: '#14b8a6',
+            weight: 3,
+            opacity: 0.6,
+            dashArray: '7 8'
+          });
+          line.addTo(connectionLayer);
+          record.line = line;
+        } else {
+          record.line = null;
+        }
+      });
+    }
+
+    function renderDistanceList() {
+      const maxDistance = Math.max(...pointRecords.map(r => r.distance), 1);
+      distanceList.innerHTML = '';
+      pointRecords.forEach((record) => {
+        const item = document.createElement('div');
+        item.className = 'distance-item';
+        if (!controls.showLabels.checked) item.style.display = 'none';
+
+        const fillPct = (record.distance / maxDistance) * 100;
+        const thresholdPct = Math.min(100, (currentRadiusMeters / Math.max(record.distance, 1)) * fillPct);
+
+        item.innerHTML = `
+          <div class="distance-top">
+            <div class="distance-name">
+              <span class="dot" style="background:${record.state === 'active' ? '#14b8a6' : record.state === 'next' ? '#f59e0b' : '#ef4444'}"></span>
+              ${record.name}
+            </div>
+            <div class="distance-meta">${metersToKm(record.distance, 2)} · ${format(record.timeMinutes, 1)} min</div>
+          </div>
+          <div class="distance-bar">
+            <div class="distance-fill" style="width:${fillPct}%"></div>
+            <div class="distance-threshold" style="width:${Math.min(fillPct, thresholdPct)}%"></div>
+          </div>
+        `;
+
+        item.addEventListener('mouseenter', () => {
+          record.marker.openPopup();
+        });
+
+        item.addEventListener('click', () => {
+          map.flyTo(record.latlng, Math.max(map.getZoom(), 14), { animate: !reducedMotion, duration: 0.6 });
+          record.marker.openPopup();
+        });
+
+        distanceList.appendChild(item);
+      });
+    }
+
+    function updateOutputs() {
+      const activated = pointRecords.filter(r => r.distance <= currentRadiusMeters);
+      const next = pointRecords.find(r => r.distance > currentRadiusMeters) || null;
+      const farthest = pointRecords[pointRecords.length - 1];
+      const avg = pointRecords.reduce((sum, r) => sum + r.distance, 0) / pointRecords.length;
+      const fastest = Math.min(...pointRecords.map(r => r.timeMinutes));
+      const targetMeters = targetRadiusMeters();
+      const edgeMinutes = (targetMeters / speedMetersPerSecond()) / 60;
+
+      outputs.currentRadiusOut.textContent = metersToKm(currentRadiusMeters, 2);
+      outputs.activatedOut.textContent = `${activated.length} / ${pointRecords.length}`;
+      outputs.nextPlaceOut.textContent = next ? next.name : 'All reached';
+      outputs.timeEdgeOut.textContent = `${format(edgeMinutes, 1)} min`;
+      outputs.farthestOut.textContent = farthest.name;
+      outputs.maxDistanceOut.textContent = metersToKm(farthest.distance, 2);
+      outputs.avgDistanceOut.textContent = metersToKm(avg, 2);
+      outputs.fastestOut.textContent = `${format(fastest, 1)} min`;
+    }
+
+    function updateScene(shouldFit = true) {
+      rippleCircle.setRadius(currentRadiusMeters);
+      haloCircle.setRadius(Math.min(currentRadiusMeters * 1.08, targetRadiusMeters() * 1.1));
+      updateMarkerStates();
+      renderDistanceList();
+      updateOutputs();
+      if (shouldFit) fitToScene();
+    }
+
+    function animateWave() {
+      stopAnimation();
+      const target = targetRadiusMeters();
+      const durationMs = parseFloat(controls.duration.value) * 1000;
+      currentRadiusMeters = 0;
+      updateScene(false);
+
+      if (reducedMotion) {
+        currentRadiusMeters = target;
+        updateScene();
+        return;
+      }
+
+      function step(timestamp) {
+        if (!lastFrameTime) lastFrameTime = timestamp;
+        const elapsed = timestamp - lastFrameTime;
+        const progress = Math.min(1, elapsed / durationMs);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        currentRadiusMeters = target * eased;
+        updateScene(progress === 1);
+        if (progress < 1) {
+          animationId = requestAnimationFrame(step);
+        } else {
+          stopAnimation();
+        }
+      }
+
+      animationId = requestAnimationFrame(step);
+    }
+
+    function resetWave() {
+      stopAnimation();
+      currentRadiusMeters = 0;
+      updateScene();
+    }
+
+    function applyPreset(name) {
+      if (name === 'core') {
+        controls.radiusKm.value = '3.5';
+        controls.speedKmh.value = '18';
+        controls.duration.value = '6';
+        setOrigin(L.latLng(originPresets.core.lat, originPresets.core.lng), originPresets.core.label);
+      }
+      if (name === 'airport') {
+        controls.radiusKm.value = '6';
+        controls.speedKmh.value = '24';
+        controls.duration.value = '7';
+        setOrigin(L.latLng(originPresets.airport.lat, originPresets.airport.lng), originPresets.airport.label);
+      }
+      if (name === 'downtown') {
+        controls.radiusKm.value = '5';
+        controls.speedKmh.value = '20';
+        controls.duration.value = '5';
+        setOrigin(L.latLng(originPresets.downtown.lat, originPresets.downtown.lng), originPresets.downtown.label);
+      }
+      refreshLabels();
+      resetWave();
+    }
+
+    function handleControlInput() {
+      refreshLabels();
+      updateScene(false);
+    }
+
+    Object.values(controls).forEach((control) => {
+      control.addEventListener('input', handleControlInput);
+      control.addEventListener('change', () => updateScene());
+    });
+
+    document.getElementById('playWave').addEventListener('click', animateWave);
+    document.getElementById('resetWave').addEventListener('click', resetWave);
+
+    document.querySelectorAll('[data-preset]').forEach((button) => {
+      button.addEventListener('click', () => applyPreset(button.dataset.preset));
+    });
+
+    originMarker.on('drag', (event) => {
+      const latlng = event.target.getLatLng();
+      setOrigin(latlng, 'Dragged origin', false);
+    });
+
+    originMarker.on('dragend', () => {
+      updateScene();
+    });
+
+    map.on('click', (event) => {
+      setOrigin(event.latlng, 'Clicked origin');
+    });
+
+    pointRecords.forEach((record) => {
+      record.marker.on('click', () => {
+        if (record.marker.isPopupOpen()) return;
+        record.marker.openPopup();
+      });
+    });
+
+    refreshLabels();
+    computeDistances();
+    outputs.originOut.textContent = origin.label;
+    updateScene();
+    fitToScene();
+
+    setTimeout(() => {
+      map.invalidateSize();
+      fitToScene();
+    }, 150);
+  </script>
+</body>
+</html>

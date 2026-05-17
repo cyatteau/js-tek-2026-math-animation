@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo 6 · Chaos Explorer</title>
+  <style>
+    :root {
+      color-scheme: only light;
+      --bg: #f5f8fc;
+      --panel: #ffffff;
+      --panel-2: #f7fbff;
+      --card: rgba(15, 23, 42, 0.03);
+      --line: rgba(15, 23, 42, 0.10);
+      --text: #10213b;
+      --muted: #5c6f8f;
+      --accent: #2563eb;
+      --accent-2: #0891b2;
+      --accent-3: #d97706;
+      --good: #059669;
+      --shadow: 0 18px 42px rgba(15, 23, 42, 0.10);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.10), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(8, 145, 178, 0.10), transparent 28%),
+        var(--bg);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .wrap {
+      max-width: 1500px;
+      height: 100vh;
+      margin: 0 auto;
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      padding: 18px;
+      align-self: stretch;
+      overflow: hidden;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.10);
+      color: #1d4ed8;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      margin: 10px 0 6px;
+      font-size: 1.58rem;
+      line-height: 1.08;
+    }
+
+    .sub {
+      margin: 0 0 12px;
+      color: var(--muted);
+      line-height: 1.34;
+      font-size: 0.92rem;
+    }
+
+    .group {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: var(--card);
+    }
+
+    .group h2 {
+      margin: 0 0 10px;
+      font-size: 0.96rem;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin: 7px 0;
+    }
+
+    label {
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .value {
+      min-width: 76px;
+      text-align: right;
+      color: #153159;
+      font-weight: 800;
+      font-feature-settings: "tnum";
+      font-size: 0.9rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin-top: 5px;
+      accent-color: var(--accent);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #f2f7ff);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 9px 10px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      font-size: 0.9rem;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(37, 99, 235, 0.22);
+      background: linear-gradient(180deg, #ffffff, #ecf4ff);
+    }
+
+    .main {
+      min-height: 0;
+    }
+
+    .stage-card {
+      height: calc(100vh - 36px);
+      min-height: 0;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .head h2 {
+      margin: 0;
+      font-size: 1.26rem;
+    }
+
+    .head p {
+      margin: 6px 0 0;
+      max-width: 920px;
+      color: var(--muted);
+      line-height: 1.34;
+      font-size: 0.94rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(100px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      padding: 10px 12px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.03);
+    }
+
+    .stat .k {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-bottom: 5px;
+    }
+
+    .stat .v {
+      font-size: 1.02rem;
+      font-weight: 900;
+      font-feature-settings: "tnum";
+    }
+
+    .viz-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 14px;
+    }
+
+    .canvas-shell {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 12px;
+      background: #eef4fb;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bif-shell {
+      min-height: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      border-radius: 16px;
+      background: #ffffff;
+    }
+
+    #bifurcationCanvas {
+      flex: 1;
+      min-height: 0;
+      cursor: crosshair;
+    }
+
+    #orbitCanvas {
+      height: 270px;
+      flex: 0 0 auto;
+    }
+
+    .progress-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    progress {
+      width: 100%;
+      height: 12px;
+      accent-color: var(--accent);
+    }
+
+    .orbit-panel {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .orbit-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    }
+
+    .orbit-card h2 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+
+    .orbit-card p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      line-height: 1.34;
+      font-size: 0.88rem;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .mini {
+      padding: 9px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.03);
+    }
+
+    .mini .label {
+      display: block;
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .mini .number {
+      font-size: 0.94rem;
+      font-weight: 900;
+      color: var(--text);
+      font-feature-settings: "tnum";
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      padding: 7px 9px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.08);
+      color: #1e3a8a;
+      font-weight: 800;
+      font-size: 0.78rem;
+    }
+
+    .hint {
+      margin-top: 10px;
+      color: #33527b;
+      font-size: 0.84rem;
+      line-height: 1.32;
+    }
+
+    @media (max-width: 1200px) {
+      body { height: auto; overflow: auto; }
+      .wrap { grid-template-columns: 1fr; height: auto; }
+      .sidebar { height: auto; overflow: visible; }
+      .stage-card { height: auto; min-height: 780px; }
+      .viz-grid { grid-template-columns: 1fr; }
+      #bifurcationCanvas { height: 520px; flex: 0 0 auto; }
+    }
+
+    @media (max-width: 760px) {
+      .wrap { padding: 16px; }
+      .stats { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      .button-row { grid-template-columns: 1fr; }
+      .viz-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="panel sidebar">
+      <div class="eyebrow">Demo 6 · Chaos Explorer</div>
+      <h1>When simple rules get wild</h1>
+      <p class="sub">Explore how one repeated rule moves from stable behavior to branching patterns and chaotic-looking regions.</p>
+
+      <section class="group">
+        <h2>Bifurcation controls</h2>
+
+        <div class="row">
+          <label for="rMin">r min</label>
+          <span class="value" id="rMinValue">2.80</span>
+        </div>
+        <input id="rMin" type="range" min="2.4" max="3.9" step="0.01" value="2.8" />
+
+        <div class="row">
+          <label for="rMax">r max</label>
+          <span class="value" id="rMaxValue">4.00</span>
+        </div>
+        <input id="rMax" type="range" min="3.2" max="4.0" step="0.01" value="4.0" />
+
+        <div class="row">
+          <label for="columns">columns</label>
+          <span class="value" id="columnsValue">1200</span>
+        </div>
+        <input id="columns" type="range" min="500" max="2200" step="50" value="1200" />
+
+        <div class="row">
+          <label for="settle">settle</label>
+          <span class="value" id="settleValue">700</span>
+        </div>
+        <input id="settle" type="range" min="200" max="1600" step="50" value="700" />
+
+        <div class="row">
+          <label for="keep">points kept</label>
+          <span class="value" id="keepValue">140</span>
+        </div>
+        <input id="keep" type="range" min="50" max="280" step="10" value="140" />
+
+        <div class="button-row">
+          <button id="renderBtn">Render</button>
+          <button id="resetBtn">Reset view</button>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>Preset windows</h2>
+        <div class="button-row">
+          <button data-preset="classic">Classic</button>
+          <button data-preset="chaos">Chaos</button>
+          <button data-preset="feigenbaum">Cascade</button>
+          <button data-preset="islands">Islands</button>
+        </div>
+        <p class="hint">Click the diagram to choose a specific <strong>r</strong> and update the orbit plot.</p>
+      </section>
+    </aside>
+
+    <main class="main">
+      <section class="panel stage-card">
+        <div class="head">
+          <div>
+            <h2>Logistic map bifurcation diagram</h2>
+            <p>For each value of <strong>r</strong>, the recurrence <strong>x<sub>n+1</sub> = r x<sub>n</sub>(1 - x<sub>n</sub>)</strong> is repeated many times. One rule creates stable points, branching cycles, and dense chaotic regions.</p>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="k">selected r</span>
+            <span class="v" id="selectedROut">3.570</span>
+          </div>
+          <div class="stat">
+            <span class="k">visible range</span>
+            <span class="v" id="rangeOut">2.80 → 4.00</span>
+          </div>
+          <div class="stat">
+            <span class="k">estimated points</span>
+            <span class="v" id="pointsOut">168k</span>
+          </div>
+          <div class="stat">
+            <span class="k">render status</span>
+            <span class="v" id="statusOut">Ready</span>
+          </div>
+          <div class="stat">
+            <span class="k">orbit behavior</span>
+            <span class="v" id="behaviorOut">Chaotic</span>
+          </div>
+        </div>
+
+        <div class="viz-grid">
+          <div class="canvas-shell bif-shell">
+            <canvas id="bifurcationCanvas" aria-label="Bifurcation diagram for the logistic map"></canvas>
+            <div class="progress-row">
+              <progress id="progressBar" max="100" value="0"></progress>
+              <span id="progressText">0%</span>
+            </div>
+          </div>
+
+          <aside class="orbit-panel">
+            <section class="orbit-card">
+              <h2>Orbit for selected r</h2>
+              <p>The line below follows one seed value as the same rule is applied again and again.</p>
+              <div class="canvas-shell">
+                <canvas id="orbitCanvas" aria-label="Orbit plot for the selected logistic map parameter"></canvas>
+              </div>
+            </section>
+
+            <section class="orbit-card">
+              <h2>Orbit summary</h2>
+              <div class="mini-grid">
+                <div class="mini">
+                  <span class="label">last x value</span>
+                  <span class="number" id="lastXOut">0.0000</span>
+                </div>
+                <div class="mini">
+                  <span class="label">unique rounded states</span>
+                  <span class="number" id="uniqueOut">0</span>
+                </div>
+                <div class="mini">
+                  <span class="label">min visible x</span>
+                  <span class="number" id="minXOut">0.0000</span>
+                </div>
+                <div class="mini">
+                  <span class="label">max visible x</span>
+                  <span class="number" id="maxXOut">0.0000</span>
+                </div>
+              </div>
+              <div class="legend">
+                <span class="chip">Stable</span>
+                <span class="chip">Periodic</span>
+                <span class="chip">Chaotic</span>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const controls = {
+      rMin: document.getElementById('rMin'),
+      rMax: document.getElementById('rMax'),
+      columns: document.getElementById('columns'),
+      settle: document.getElementById('settle'),
+      keep: document.getElementById('keep')
+    };
+
+    const outputs = {
+      rMinValue: document.getElementById('rMinValue'),
+      rMaxValue: document.getElementById('rMaxValue'),
+      columnsValue: document.getElementById('columnsValue'),
+      settleValue: document.getElementById('settleValue'),
+      keepValue: document.getElementById('keepValue'),
+      selectedROut: document.getElementById('selectedROut'),
+      rangeOut: document.getElementById('rangeOut'),
+      pointsOut: document.getElementById('pointsOut'),
+      statusOut: document.getElementById('statusOut'),
+      behaviorOut: document.getElementById('behaviorOut'),
+      progressText: document.getElementById('progressText'),
+      lastXOut: document.getElementById('lastXOut'),
+      uniqueOut: document.getElementById('uniqueOut'),
+      minXOut: document.getElementById('minXOut'),
+      maxXOut: document.getElementById('maxXOut')
+    };
+
+    const bifCanvas = document.getElementById('bifurcationCanvas');
+    const orbitCanvas = document.getElementById('orbitCanvas');
+    const progressBar = document.getElementById('progressBar');
+
+    const bifCtx = bifCanvas.getContext('2d');
+    const orbitCtx = orbitCanvas.getContext('2d');
+
+    let dpr = Math.max(1, window.devicePixelRatio || 1);
+    let selectedR = 3.57;
+    let renderToken = 0;
+    let latestOrbit = [];
+
+    function format(num, digits = 3) {
+      return Number(num).toFixed(digits);
+    }
+
+    function state() {
+      return {
+        rMin: parseFloat(controls.rMin.value),
+        rMax: parseFloat(controls.rMax.value),
+        columns: parseInt(controls.columns.value, 10),
+        settle: parseInt(controls.settle.value, 10),
+        keep: parseInt(controls.keep.value, 10)
+      };
+    }
+
+    function updateLabels() {
+      const s = state();
+      outputs.rMinValue.textContent = format(s.rMin, 2);
+      outputs.rMaxValue.textContent = format(s.rMax, 2);
+      outputs.columnsValue.textContent = String(s.columns);
+      outputs.settleValue.textContent = String(s.settle);
+      outputs.keepValue.textContent = String(s.keep);
+      outputs.rangeOut.textContent = `${format(s.rMin, 2)} → ${format(s.rMax, 2)}`;
+      outputs.pointsOut.textContent = `${Math.round((s.columns * s.keep) / 1000)}k`;
+
+      if (selectedR < s.rMin || selectedR > s.rMax) {
+        selectedR = (s.rMin + s.rMax) / 2;
+      }
+      outputs.selectedROut.textContent = format(selectedR, 3);
+    }
+
+    function fitCanvas(canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const width = Math.max(300, Math.floor(rect.width * dpr));
+      const height = Math.max(220, Math.floor(rect.height * dpr));
+      canvas.width = width;
+      canvas.height = height;
+    }
+
+    function resizeCanvases() {
+      dpr = Math.max(1, window.devicePixelRatio || 1);
+      fitCanvas(bifCanvas);
+      fitCanvas(orbitCanvas);
+    }
+
+    function clearCanvas(ctx, width, height) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    function drawBifurcationFrameBase(s) {
+      const w = bifCanvas.width;
+      const h = bifCanvas.height;
+      clearCanvas(bifCtx, w, h);
+
+      bifCtx.save();
+      bifCtx.strokeStyle = 'rgba(15,23,42,0.10)';
+      bifCtx.fillStyle = 'rgba(56,78,112,0.80)';
+      bifCtx.lineWidth = 1 * dpr;
+      bifCtx.font = `${12 * dpr}px Inter, system-ui, sans-serif`;
+
+      for (let i = 0; i <= 5; i++) {
+        const y = i * (h / 5);
+        bifCtx.beginPath();
+        bifCtx.moveTo(0, y);
+        bifCtx.lineTo(w, y);
+        bifCtx.stroke();
+
+        const value = 1 - i / 5;
+        bifCtx.fillText(value.toFixed(1), 8 * dpr, y + 16 * dpr);
+      }
+
+      const ticks = 6;
+      for (let i = 0; i <= ticks; i++) {
+        const x = i * (w / ticks);
+        const r = s.rMin + (i / ticks) * (s.rMax - s.rMin);
+        bifCtx.beginPath();
+        bifCtx.moveTo(x, 0);
+        bifCtx.lineTo(x, h);
+        bifCtx.stroke();
+        bifCtx.fillText(r.toFixed(2), Math.max(8 * dpr, x - 20 * dpr), h - 10 * dpr);
+      }
+
+      bifCtx.fillStyle = 'rgba(16, 33, 59, 0.88)';
+      bifCtx.fillText('x', 10 * dpr, 18 * dpr);
+      bifCtx.fillText('r', w - 18 * dpr, h - 12 * dpr);
+      bifCtx.restore();
+    }
+
+    function drawSelectedRLine(s) {
+      const w = bifCanvas.width;
+      const h = bifCanvas.height;
+      const x = ((selectedR - s.rMin) / (s.rMax - s.rMin)) * w;
+
+      bifCtx.save();
+      bifCtx.strokeStyle = 'rgba(245, 158, 11, 0.95)';
+      bifCtx.lineWidth = 1.8 * dpr;
+      bifCtx.beginPath();
+      bifCtx.moveTo(x, 0);
+      bifCtx.lineTo(x, h);
+      bifCtx.stroke();
+
+      bifCtx.fillStyle = 'rgba(245, 158, 11, 0.96)';
+      bifCtx.font = `700 ${12 * dpr}px Inter, system-ui, sans-serif`;
+      bifCtx.fillText(`r = ${selectedR.toFixed(3)}`, Math.min(w - 96 * dpr, x + 10 * dpr), 18 * dpr);
+      bifCtx.restore();
+    }
+
+    function logisticOrbit(r, totalIterations, seed = 0.217) {
+      let x = seed;
+      const values = [];
+      for (let i = 0; i < totalIterations; i++) {
+        x = r * x * (1 - x);
+        values.push(x);
+      }
+      return values;
+    }
+
+    function orbitBehavior(values) {
+      const tail = values.slice(-80);
+      const rounded = new Set(tail.map(v => v.toFixed(4)));
+      if (rounded.size <= 1) return 'Stable';
+      if (rounded.size <= 8) return 'Periodic';
+      return 'Chaotic';
+    }
+
+    function updateOrbitMetrics(values) {
+      const tail = values.slice(-120);
+      const rounded = new Set(tail.map(v => v.toFixed(4)));
+      const min = Math.min(...tail);
+      const max = Math.max(...tail);
+      outputs.lastXOut.textContent = tail[tail.length - 1].toFixed(4);
+      outputs.uniqueOut.textContent = String(rounded.size);
+      outputs.minXOut.textContent = min.toFixed(4);
+      outputs.maxXOut.textContent = max.toFixed(4);
+      outputs.behaviorOut.textContent = orbitBehavior(values);
+    }
+
+    function drawOrbitPlot() {
+      const w = orbitCanvas.width;
+      const h = orbitCanvas.height;
+      clearCanvas(orbitCtx, w, h);
+
+      const margin = { top: 26 * dpr, right: 18 * dpr, bottom: 34 * dpr, left: 40 * dpr };
+      const innerW = w - margin.left - margin.right;
+      const innerH = h - margin.top - margin.bottom;
+      const values = latestOrbit;
+      const total = values.length;
+
+      orbitCtx.save();
+      orbitCtx.translate(margin.left, margin.top);
+
+      orbitCtx.strokeStyle = 'rgba(15,23,42,0.10)';
+      orbitCtx.lineWidth = 1 * dpr;
+      orbitCtx.fillStyle = 'rgba(56,78,112,0.80)';
+      orbitCtx.font = `${11 * dpr}px Inter, system-ui, sans-serif`;
+
+      for (let i = 0; i <= 4; i++) {
+        const y = i * (innerH / 4);
+        orbitCtx.beginPath();
+        orbitCtx.moveTo(0, y);
+        orbitCtx.lineTo(innerW, y);
+        orbitCtx.stroke();
+        orbitCtx.fillText((1 - i / 4).toFixed(2), -30 * dpr, y + 4 * dpr);
+      }
+
+      for (let i = 0; i <= 5; i++) {
+        const x = i * (innerW / 5);
+        orbitCtx.beginPath();
+        orbitCtx.moveTo(x, 0);
+        orbitCtx.lineTo(x, innerH);
+        orbitCtx.stroke();
+        const step = Math.round((i / 5) * (total - 1));
+        orbitCtx.fillText(String(step), x - 8 * dpr, innerH + 18 * dpr);
+      }
+
+      orbitCtx.strokeStyle = 'rgba(96, 165, 250, 0.95)';
+      orbitCtx.lineWidth = 2.2 * dpr;
+      orbitCtx.beginPath();
+
+      values.forEach((v, i) => {
+        const x = (i / Math.max(1, total - 1)) * innerW;
+        const y = innerH - v * innerH;
+        if (i === 0) orbitCtx.moveTo(x, y);
+        else orbitCtx.lineTo(x, y);
+      });
+      orbitCtx.stroke();
+
+      orbitCtx.fillStyle = 'rgba(34, 211, 238, 0.95)';
+      values.slice(-24).forEach((v, i, arr) => {
+        const index = total - arr.length + i;
+        const x = (index / Math.max(1, total - 1)) * innerW;
+        const y = innerH - v * innerH;
+        orbitCtx.beginPath();
+        orbitCtx.arc(x, y, 2.2 * dpr, 0, Math.PI * 2);
+        orbitCtx.fill();
+      });
+
+      orbitCtx.fillStyle = 'rgba(16,33,59,0.90)';
+      orbitCtx.font = `700 ${12 * dpr}px Inter, system-ui, sans-serif`;
+      orbitCtx.fillText(`Orbit for r = ${selectedR.toFixed(3)}`, 0, -8 * dpr);
+      orbitCtx.restore();
+    }
+
+    function renderOrbitForSelection() {
+      latestOrbit = logisticOrbit(selectedR, 180);
+      updateOrbitMetrics(latestOrbit);
+      drawOrbitPlot();
+      outputs.selectedROut.textContent = format(selectedR, 3);
+    }
+
+    function renderBifurcation() {
+      const s = state();
+      if (s.rMax <= s.rMin + 0.02) {
+        controls.rMax.value = (s.rMin + 0.02).toFixed(2);
+      }
+      updateLabels();
+
+      const token = ++renderToken;
+      const current = state();
+      const w = bifCanvas.width;
+      const h = bifCanvas.height;
+      const pointSize = Math.max(1.2 * dpr, 1.2);
+      const totalColumns = current.columns;
+      const columnsPerFrame = Math.max(30, Math.floor(220000 / Math.max(1, current.keep + current.settle)));
+
+      outputs.statusOut.textContent = 'Rendering';
+      progressBar.value = 0;
+      outputs.progressText.textContent = '0%';
+
+      drawBifurcationFrameBase(current);
+
+      function drawChunk(startColumn) {
+        if (token !== renderToken) return;
+
+        const endColumn = Math.min(totalColumns, startColumn + columnsPerFrame);
+
+        for (let i = startColumn; i < endColumn; i++) {
+          const r = current.rMin + (i / Math.max(1, totalColumns - 1)) * (current.rMax - current.rMin);
+          let x = 0.37;
+          for (let j = 0; j < current.settle; j++) {
+            x = r * x * (1 - x);
+          }
+
+          for (let k = 0; k < current.keep; k++) {
+            x = r * x * (1 - x);
+            const px = ((r - current.rMin) / (current.rMax - current.rMin)) * w;
+            const py = h - x * h;
+            const hue = 210 + 45 * x;
+            bifCtx.fillStyle = `hsla(${hue}, 88%, 48%, 0.20)`;
+            bifCtx.fillRect(px, py, pointSize, pointSize);
+          }
+        }
+
+        const pct = Math.round((endColumn / totalColumns) * 100);
+        progressBar.value = pct;
+        outputs.progressText.textContent = `${pct}%`;
+
+        if (endColumn < totalColumns) {
+          requestAnimationFrame(() => drawChunk(endColumn));
+        } else {
+          drawSelectedRLine(current);
+          outputs.statusOut.textContent = 'Complete';
+        }
+      }
+
+      requestAnimationFrame(() => drawChunk(0));
+      renderOrbitForSelection();
+    }
+
+    function applyPreset(name) {
+      if (name === 'classic') {
+        controls.rMin.value = '2.80';
+        controls.rMax.value = '4.00';
+        controls.columns.value = '1200';
+        controls.settle.value = '700';
+        controls.keep.value = '140';
+        selectedR = 3.57;
+      }
+      if (name === 'chaos') {
+        controls.rMin.value = '3.55';
+        controls.rMax.value = '4.00';
+        controls.columns.value = '1800';
+        controls.settle.value = '1100';
+        controls.keep.value = '220';
+        selectedR = 3.91;
+      }
+      if (name === 'feigenbaum') {
+        controls.rMin.value = '2.95';
+        controls.rMax.value = '3.58';
+        controls.columns.value = '1700';
+        controls.settle.value = '1000';
+        controls.keep.value = '140';
+        selectedR = 3.45;
+      }
+      if (name === 'islands') {
+        controls.rMin.value = '3.82';
+        controls.rMax.value = '3.86';
+        controls.columns.value = '1800';
+        controls.settle.value = '1300';
+        controls.keep.value = '220';
+        selectedR = 3.84;
+      }
+      updateLabels();
+      renderBifurcation();
+    }
+
+    Object.values(controls).forEach(control => {
+      control.addEventListener('input', updateLabels);
+      control.addEventListener('change', renderBifurcation);
+    });
+
+    document.getElementById('renderBtn').addEventListener('click', renderBifurcation);
+    document.getElementById('resetBtn').addEventListener('click', () => applyPreset('classic'));
+
+    document.querySelectorAll('[data-preset]').forEach(button => {
+      button.addEventListener('click', () => applyPreset(button.dataset.preset));
+    });
+
+    bifCanvas.addEventListener('click', event => {
+      const rect = bifCanvas.getBoundingClientRect();
+      const ratio = (event.clientX - rect.left) / rect.width;
+      const s = state();
+      selectedR = s.rMin + Math.max(0, Math.min(1, ratio)) * (s.rMax - s.rMin);
+      renderBifurcation();
+    });
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        resizeCanvases();
+        updateLabels();
+        renderBifurcation();
+      }, 150);
+    });
+
+    requestAnimationFrame(() => {
+      resizeCanvases();
+      updateLabels();
+      renderBifurcation();
+    });
+  </script>
+</body>
+</html>
